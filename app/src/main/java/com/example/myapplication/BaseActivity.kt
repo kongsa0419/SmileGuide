@@ -2,7 +2,9 @@ package com.example.myapplication
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -31,6 +33,7 @@ import androidx.camera.video.QualitySelector
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.PermissionChecker
 import com.example.myapplication.databinding.ActivityMainBinding
+import java.io.File
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -194,9 +197,16 @@ class BaseActivity : AppCompatActivity() {
                     // preview 대신에 mainShutter써봐
                     viewBinding.mainPreviewview.animate().alpha(0f).setDuration(50)
                         .withEndAction { viewBinding.mainPreviewview.alpha = 1f }
+
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
+                    //content://media/external/images/media/1000004694
+                    //val savedUri = output.savedUri ?: Uri.fromFile(File(output.savedUri.toString()))
+                    val intent = Intent(this@BaseActivity, CaptureResult::class.java).apply {
+                        putExtra("imageUri", output.savedUri.toString())
+                    }
+                    startActivity(intent)
                 }
             }
         )
