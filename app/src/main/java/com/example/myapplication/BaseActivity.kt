@@ -35,7 +35,34 @@ import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+
+//NOTI @ref : [https://github.com/android-academy-minsk/CameraX/blob/master/app/src/main/java/com/psliusar/nicolas/camera/LuminosityAnalyzer.kt]
+typealias LumaListener = (luma: Double) -> Unit
 class BaseActivity : AppCompatActivity() {
+    private class LuminosityAnalyzer(private val listener: LumaListener) : ImageAnalysis.Analyzer {
+
+        private fun ByteBuffer.toByteArray(): ByteArray {
+            rewind()    // Rewind the buffer to zero
+            val data = ByteArray(remaining())
+            get(data)   // Copy the buffer into a byte array
+            return data // Return the byte array
+        }
+
+        override fun analyze(image: ImageProxy) {
+
+            val buffer = image.planes[0].buffer
+            val data = buffer.toByteArray()
+            val pixels = data.map { it.toInt() and 0xFF }
+            val luma = pixels.average()
+
+            listener(luma)
+
+            image.close()
+        }
+    }
+
+
+
     private lateinit var viewBinding: ActivityMainBinding
 
     //private var imageCapture: ImageCapture? = null
@@ -93,6 +120,14 @@ class BaseActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.mainPreviewview.surfaceProvider)
                 }
 
+            val imageAnalyzer = ImageAnalysis.Builder()
+                .build()
+                .also {
+                    it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+                        Log.d(TAG, "Average luminosity: $luma")
+                    })
+                }
+
             imageCapture = ImageCapture.Builder().build()
 
             // Select back camera as a default
@@ -108,7 +143,7 @@ class BaseActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture)
+                    this, cameraSelector, preview, imageCapture, imageAnalyzer)
 
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -214,3 +249,4 @@ class BaseActivity : AppCompatActivity() {
             }.toTypedArray()
     }
 }
+
