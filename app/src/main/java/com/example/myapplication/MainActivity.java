@@ -38,7 +38,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 /*
-NOTI : [camerax - java reference]
+NOTI : CAMERAX는 코틀린으로 대부분 예제들이 되어있고, 자바 코드는 제대로 동작하지 않아보임... 결국 코틀린을 배워야겠음.
+ 고로 이 파일대신 BaseActivity를 메인으로 사용함.
+  [camerax - java reference]
     https://github.com/Faisal-FS/CameraX-In-Java
     https://www.youtube.com/watch?v=IrwhjDtpIU0
 */

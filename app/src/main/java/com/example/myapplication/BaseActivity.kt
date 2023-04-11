@@ -35,8 +35,6 @@ import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
-//[MAKE Personal Camera] ref : https://www.geeksforgeeks.org/how-to-create-custom-camera-using-camerax-in-android/
 class BaseActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
 
@@ -47,6 +45,7 @@ class BaseActivity : AppCompatActivity() {
     private var recording: Recording? = null
 
     private lateinit var cameraExecutor: ExecutorService
+    private var isFacingFront = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,11 +64,17 @@ class BaseActivity : AppCompatActivity() {
         // Set up the listeners for take photo and video capture buttons
         //viewBinding.mainPreviewview
         viewBinding.mainShutter.setOnClickListener { takePhoto() }
+        viewBinding.mainShutter.setOnLongClickListener { captureVideo(); true;}
         //viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
+        viewBinding.mainCameraFlip.setOnClickListener { flipCamera() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
+    private fun flipCamera() {
+        isFacingFront = !isFacingFront
+        startCamera()
+    }
 
 
     private fun startCamera() {
@@ -91,7 +96,11 @@ class BaseActivity : AppCompatActivity() {
             imageCapture = ImageCapture.Builder().build()
 
             // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            val cameraSelector = if(isFacingFront) {
+                CameraSelector.DEFAULT_FRONT_CAMERA
+            }else{
+                CameraSelector.DEFAULT_BACK_CAMERA
+            }
 
             try {
                 // Unbind use cases before rebinding
@@ -114,13 +123,14 @@ class BaseActivity : AppCompatActivity() {
         val imageCapture = imageCapture ?: return
 
         // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.KOREA)
+        val name = "SmileGuide" + SimpleDateFormat(FILENAME_FORMAT, Locale.KOREA)
             .format(System.currentTimeMillis())
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
+                //put(MediaStore.Images.Media.RELATIVE_PATH, "{}")
             }
         }
 
@@ -145,6 +155,10 @@ class BaseActivity : AppCompatActivity() {
 
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults) {
+                    // NOTI: 사진 촬칵 하는 효과
+                    // preview 대신에 mainShutter써봐
+                    viewBinding.mainPreviewview.animate().alpha(0f).setDuration(50)
+                        .withEndAction { viewBinding.mainPreviewview.alpha = 1f }
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
@@ -163,6 +177,7 @@ class BaseActivity : AppCompatActivity() {
 
 
     override fun onRequestPermissionsResult(
+        //NOTI : super 무시해도 동작 (빨간줄 무시하셈)
         requestCode: Int, permissions: Array<String>, grantResults:
         IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
