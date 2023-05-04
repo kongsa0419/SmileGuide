@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/upperbar"
+        android:background="@color/white"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <Button
+            android:id="@+id/capture_result_btn_proceed"
+            android:layout_width="53dp"
+            android:layout_height="48dp"
+            android:background="@drawable/ic_back_black"
+            android:alpha="0.5"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginVertical="10dp"
+            android:layout_marginLeft="6dp"
+            android:padding="10dp"
+            />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/quiz_layout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/main_blue"
+        app:layout_constraintTop_toBottomOf="@+id/upperbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottombar">
+
+        <TextView
+            android:id="@+id/quiz_question_statement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/quiz_question_section"
+            app:layout_constraintStart_toStartOf="@+id/quiz_question_section"
+            android:text="@string/sample_question"
+            android:textColor="@color/question_orange"
+            android:maxWidth="780px"
+            android:paddingRight="30dp"
+            android:paddingLeft="10dp"
+            android:paddingVertical="8dp"
+            android:textSize="24px"
+            />
+        <TextView
+            android:id="@+id/quiz_question_section"
+            android:layout_width="780px"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="40dp"
+            android:paddingVertical="20dp"
+            android:background="@drawable/rounded_corner_gray_question"
+            android:alpha="0.6"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/quiz_answer_section"
+            android:layout_marginTop="30dp"
+            android:text="@string/Lorem_Ipsum"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:maxHeight="160dp"
+            android:scrollbars="vertical"
+            />
+        
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/quiz_answer_section"
+            android:layout_width="1000px"
+            android:layout_height="wrap_content"
+            android:maxHeight="230dp"
+            android:paddingHorizontal="30dp"
+            android:paddingVertical="30dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/quiz_question_section"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <Button
+                android:id="@+id/quiz_answer_btn1"
+                android:layout_height="50dp"
+                android:layout_width="100dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/quiz_answer_btn2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/quiz_answer_btn3"
+                android:layout_marginVertical="10dp"
+                android:background="@drawable/rounded_corner_blue_answer"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:text="기뻐요"/>
+
+            <Button
+                android:id="@+id/quiz_answer_btn2"
+                android:layout_height="50dp"
+                android:layout_width="100dp"
+                app:layout_constraintStart_toEndOf="@+id/quiz_answer_btn1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginVertical="10dp"
+                app:layout_constraintBottom_toTopOf="@+id/quiz_answer_btn4"
+                android:background="@drawable/rounded_corner_blue_answer"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:text="슬퍼요"/>
+
+            <Button
+                android:id="@+id/quiz_answer_btn3"
+                android:layout_height="50dp"
+                android:layout_width="100dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/quiz_answer_btn4"
+                app:layout_constraintTop_toBottomOf="@+id/quiz_answer_btn1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:background="@drawable/rounded_corner_blue_answer"
+                android:layout_marginVertical="10dp"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:text="화나요"/>
+
+            <Button
+                android:id="@+id/quiz_answer_btn4"
+                android:layout_height="50dp"
+                android:layout_width="100dp"
+                app:layout_constraintStart_toEndOf="@+id/quiz_answer_btn3"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/quiz_answer_btn2"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:background="@drawable/rounded_corner_blue_answer"
+                android:layout_marginVertical="10dp"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:text="고마워요"/>
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottombar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="13dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <!--    open to default gallery app-->
+        <Button
+            android:id="@+id/capture_result_btn_gallery"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:padding="20dp"
+            android:background="@drawable/baseline_keyboard_arrow_up_24"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <!--    proceed to get API's reponse and hold the image on the middleground-->
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,6 +9,7 @@
         android:id="@+id/capture_result_image"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:background="@color/black"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/capture_result_bottombar"
@@ -18,7 +19,8 @@
         android:id="@+id/capture_result_bottombar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingVertical="20dp"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="13dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
@@ -26,27 +28,39 @@
         <!--    open to default gallery app-->
         <Button
             android:id="@+id/capture_result_btn_gallery"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:background="@drawable/outline_photo_24"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/capture_result_btn_proceed"/>
+            android:visibility="invisible"/>
 
-        <!--    proceed to get API's reponse and hold the image on the middleground-->
+
         <Button
             android:id="@+id/capture_result_btn_proceed"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="Proceed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="이 사진으로 진행"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/capture_result_btn_gallery"
-            app:layout_constraintEnd_toEndOf = "parent"
-            app:layout_constraintRight_toRightOf="parent"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+        <!--    proceed to get API's reponse and hold the image on the middleground-->
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
+    <Button
+        android:id="@+id/capture_result_btn_back"
+        android:layout_width="53dp"
+        android:layout_height="48dp"
+        android:background="@drawable/ic_back"
+        android:alpha="0.5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_margin="5dp"
+        android:padding="10dp"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

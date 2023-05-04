@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "72633950418",
+    "project_id": "smileguide-80c0f",
+    "storage_bucket": "smileguide-80c0f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72633950418:android:1e4375f59fae00b42dcd0b",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "72633950418-en204oum8fk2gipblsk6o12ekd4a36so.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt1ron9xUDJJc1YQG-UynW2D0cz7SwMqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72633950418-en204oum8fk2gipblsk6o12ekd4a36so.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

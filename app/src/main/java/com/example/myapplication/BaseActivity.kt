@@ -1,42 +1,30 @@
 package com.example.myapplication
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.ImageCapture
+import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import android.widget.Toast
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.core.Preview
-import androidx.camera.core.CameraSelector
-import android.util.Log
-import android.widget.ImageView
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
-import androidx.camera.video.FallbackStrategy
-import androidx.camera.video.MediaStoreOutputOptions
-import androidx.camera.video.Quality
-import androidx.camera.video.QualitySelector
-import androidx.camera.video.VideoRecordEvent
-import androidx.core.content.PermissionChecker
 import com.example.myapplication.databinding.ActivityMainBinding
-import java.io.File
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
-import java.util.Locale
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 
 //NOTI @ref : [https://github.com/android-academy-minsk/CameraX/blob/master/app/src/main/java/com/psliusar/nicolas/camera/LuminosityAnalyzer.kt]
@@ -65,7 +53,7 @@ class BaseActivity : AppCompatActivity() {
     }
 
 
-
+    //members
     private lateinit var viewBinding: ActivityMainBinding
 
     //private var imageCapture: ImageCapture? = null
@@ -76,6 +64,9 @@ class BaseActivity : AppCompatActivity() {
 
     private lateinit var cameraExecutor: ExecutorService
     private var isFacingFront = true
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,6 +90,8 @@ class BaseActivity : AppCompatActivity() {
         viewBinding.mainCameraFlip.setOnClickListener { flipCamera() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+
+        showInitialDialog()
     }
 
     private fun flipCamera() {
@@ -106,6 +99,12 @@ class BaseActivity : AppCompatActivity() {
         startCamera()
     }
 
+    private fun showInitialDialog(){
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("만나서 반갑습니다!").setMessage("진행에 앞서 당신의 사진을 부탁드려요^^")
+        val alertDialog = builder.create()
+        alertDialog.show()
+    }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -198,7 +197,7 @@ class BaseActivity : AppCompatActivity() {
                     viewBinding.mainPreviewview.animate().alpha(0f).setDuration(50)
                         .withEndAction { viewBinding.mainPreviewview.alpha = 1f }
 
-                    val msg = "Photo capture succeeded: ${output.savedUri}"
+                    val msg = "Photo capture succeeded: ${output.savedUri}" //로컬파일위치
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                     //content://media/external/images/media/1000004694
@@ -215,14 +214,9 @@ class BaseActivity : AppCompatActivity() {
     private fun captureVideo() {}
 
 
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(
-            baseContext, it) == PackageManager.PERMISSION_GRANTED
-    }
-
-
+    @SuppressLint("MissingSuperCall")
+    //NOTI : super 무시해도 동작 (빨간줄 무시하셈)
     override fun onRequestPermissionsResult(
-        //NOTI : super 무시해도 동작 (빨간줄 무시하셈)
         requestCode: Int, permissions: Array<String>, grantResults:
         IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
@@ -235,6 +229,12 @@ class BaseActivity : AppCompatActivity() {
                 finish()
             }
         }
+    }
+
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+            baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
 

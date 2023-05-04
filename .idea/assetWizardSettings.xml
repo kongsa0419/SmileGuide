@@ -331,7 +331,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:/$USER_HOME$/AppData/Local/Android/Sdk/icons/material/materialicons/gps_fixed/baseline_gps_fixed_24.xml" />
+                                      <entry key="url" value="file:/$USER_HOME$/AppData/Local/Android/Sdk/icons/material/materialicons/keyboard_arrow_up/baseline_keyboard_arrow_up_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -341,8 +341,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="a8cff6" />
-                            <entry key="outputName" value="baseline_gps_fixed_24" />
+                            <entry key="opacityPercent" value="40" />
+                            <entry key="outputName" value="baseline_keyboard_arrow_up_24" />
                             <entry key="sourceFile" value="C:\Users\Admin\AndroidStudioProjects\MyApplication" />
                           </map>
                         </option>

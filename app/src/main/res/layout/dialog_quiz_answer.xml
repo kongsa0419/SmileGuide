@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout
+        android:id="@+id/dialog_quiz_result_container"
+        android:layout_margin="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/dialog_quiz_result_status"
+            android:layout_height="40dp"
+            android:layout_width="100dp"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/rounded_corner_blue_answer"
+            android:textAlignment="center"
+            android:gravity="center"
+            tools:text="잘했어요!"/>
+
+        <TextView
+            android:id="@+id/quiz_question_section"
+            android:layout_width="600px"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="40dp"
+            android:paddingVertical="20dp"
+            android:background="@drawable/rounded_corner_quiz_comment"
+            android:layout_marginTop="13dp"
+            tools:text="@string/Lorem_Ipsum"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:maxHeight="160dp"
+            android:scrollbars="vertical"/>
+
+        <Button
+            android:id="@+id/dialog_quiz_result_btn_next"
+            android:layout_height="50dp"
+            android:layout_width="130dp"
+            android:layout_marginTop="50dp"
+            android:background="@drawable/rounded_corner_quiz_btn_next"
+            android:textAlignment="center"
+            android:gravity="center"
+            tools:text="표정연습\n하러가기"/>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

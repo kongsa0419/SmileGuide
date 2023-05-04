@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">Smile Guide</string>
+    <string name="Lorem_Ipsum">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</string>
+    <string name="sample_question">Q. 다음과 같이 상황이 주어졌다고 가정하자. 그러한 상황에서 당신이 느껴야 할 감정에 가장 가까운 것을 골라보자</string>
+
+    <string name="dialog_quiz_corr_great">잘했어요!</string>
+    <string name="dialog_quiz_corr_again">다시 해볼까요?</string>
+    <string name="dialog_quiz_click_train">표정연습하러가기</string>
+    <string name="dialog_quiz_click_again">다시 하기</string>
+
+
+
+    <string-array name="emotions">
+        <item>기뻐요</item>
+        <item>슬퍼요</item>
+        <item>화나요</item>
+        <item>고마워요</item>
+        <item>놀라요</item>
+        <item>짜증나요</item>
+    </string-array>
+
 </resources>

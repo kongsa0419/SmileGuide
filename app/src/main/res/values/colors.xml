@@ -8,4 +8,10 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="main_blue">#C5ECF8</color>
+    <color name="question_gray">#D9D9D9</color>
+    <color name="question_gray_border">#DDDDDD</color>
+    <color name="answer_blue">#DEF3FF</color>
+    <color name="answer_blue_border">#45494E</color>
+    <color name="question_orange">#ff4800</color>
+    <color name="quiz_dialog_correction_clickable_yellow">#FFDEC0</color>
 </resources>
