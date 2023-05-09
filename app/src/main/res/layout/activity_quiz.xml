@@ -14,7 +14,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent">
         <Button
-            android:id="@+id/capture_result_btn_proceed"
+            android:id="@+id/quiz_btn_back"
             android:layout_width="53dp"
             android:layout_height="48dp"
             android:background="@drawable/ic_back_black"
@@ -62,14 +62,14 @@
             android:paddingRight="30dp"
             android:paddingLeft="10dp"
             android:paddingVertical="8dp"
-            android:textSize="24px"
+            android:textSize="12sp"
             />
         <TextView
             android:id="@+id/quiz_question_section"
             android:layout_width="780px"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="40dp"
-            android:paddingVertical="20dp"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="10dp"
             android:background="@drawable/rounded_corner_gray_question"
             android:alpha="0.6"
             app:layout_constraintStart_toStartOf="parent"
@@ -80,8 +80,9 @@
             android:text="@string/Lorem_Ipsum"
             android:textAlignment="center"
             android:gravity="center"
-            android:maxHeight="160dp"
+            android:maxHeight="200dp"
             android:scrollbars="vertical"
+            android:textSize="12sp"
             />
         
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -186,7 +187,7 @@
 
         <!--    open to default gallery app-->
         <Button
-            android:id="@+id/capture_result_btn_gallery"
+            android:id="@+id/quiz_btn_gallery"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:padding="20dp"

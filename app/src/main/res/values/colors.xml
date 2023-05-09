@@ -14,4 +14,5 @@
     <color name="answer_blue_border">#45494E</color>
     <color name="question_orange">#ff4800</color>
     <color name="quiz_dialog_correction_clickable_yellow">#FFDEC0</color>
+    <color name="grey_transparent">#DBECECEC</color>
 </resources>

@@ -19,6 +19,7 @@
         android:id="@+id/capture_result_bottombar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="80dp"
         android:paddingVertical="10dp"
         android:paddingHorizontal="13dp"
         app:layout_constraintBottom_toBottomOf="parent"

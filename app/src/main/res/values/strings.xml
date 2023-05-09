@@ -19,4 +19,32 @@
         <item>짜증나요</item>
     </string-array>
 
+    <!--sharedPreference : 사진 캐쉬해둔 값들 찾을때 사용-->
+    <string name="preference_file_key">com.example.myapplication.PREFERENCE_FILE_KEY</string>
+    <string name="orig_pic">orig_pic</string>
+    <string name="orig_pic_web">orig_pic</string>
+    <string name="orig_pic_local">orig_pic</string>
+
+    <string name="trns_pic">trns_pic</string>
+    <string name="trns_picX">trns_picX</string>
+
+
+
+
+
+
+    <!--Activity Intent codes-->
+    <string name="intent_capture_to_base">intent_capture_to_base</string>
+    <string name="intent_capture_to_quiz">intent_capture_to_quiz</string>
+    <string name="intent_quiz_to_quiz">intent_quiz_to_quiz</string>
+    <string name="intent_quiz_to_base">intent_quiz_to_base</string>
+
+
+
+
+    <!-- logging   -->
+    <string name="log_key_for_quizlayout">lkf_quizlayout</string>
+
+
+
 </resources>
