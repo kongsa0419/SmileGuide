@@ -28,7 +28,7 @@ android {
         //firebase bucket
         buildConfigField "String", "firebase_bucket", properties["firebase.bucket"]
         // api key 변수 지정
-        buildConfigField "String", "APIKEY1", properties["api.key.test1"]
+        buildConfigField "String", "APIKEY1", properties["api.key.ailabtools"]
         buildConfigField "String", "APIKEY2", properties["api.key.test2"]
         buildConfigField "String", "APIKEY3", properties["api.key.test3"]
     }

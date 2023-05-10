@@ -55,30 +55,18 @@ class QuizActivity : AppCompatActivity() {
         //TODO:
         activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if(result.resultCode == INTENT_CODE_FROM_QUIZ_TO_QUIZ){
-                val data: Intent? = result.data
-                // 문제, 상황설명, 버튼에 들어갈 텍스트들을 reset
+                //restart()? activity?
             }
         }
 
-        init() /*INFO: onClickListener(), ... 등 따로 빼냄**/
+        init() // onClickListener(), ... 등 따로 빼냄
     }
 
 
     fun init(){
-
-        viewBinding.quizBtnBack.setOnClickListener(){
-            finish()
-        }
-
-
-        viewBinding.quizBtnGallery.setOnClickListener(){
-            //TODO:
-        }
-
-
+        viewBinding.quizBtnBack.setOnClickListener(){ finish() }
+        viewBinding.quizBtnGallery.setOnClickListener(){/*TODO:*/ }
         initBtns()
-
-
     }
 
 
