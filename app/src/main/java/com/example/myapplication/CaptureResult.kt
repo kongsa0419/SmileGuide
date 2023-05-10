@@ -1,30 +1,20 @@
 package com.example.myapplication
 
-import android.app.Activity
 import android.app.ProgressDialog
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.net.toUri
 import com.bumptech.glide.Glide
-import com.example.myapplication.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_BASE
 import com.example.myapplication.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_QUIZ
 import com.example.myapplication.databinding.ActivityCaptureResultBinding
-import com.example.myapplication.databinding.ActivityMainBinding
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.ktx.storage
-import java.text.SimpleDateFormat
 import java.util.*
 
 class CaptureResult : AppCompatActivity() {
@@ -38,18 +28,9 @@ class CaptureResult : AppCompatActivity() {
         setContentView(viewBinding.root)
 
 
-
-
-        val imageUri = intent.getStringExtra(getString(R.string.orig_pic)) // 로컬 파일 URI : String
-        val imgUri = Uri.parse(imageUri) // URI 데이터타입 : Uri
-
-        Glide.with(this)
-            .load(imageUri)
-            .into(viewBinding.captureResultImage)
-
         /** INFO: 다른 액티비티에서 이 액티비티로 넘어왔을때,
          *  INFO resultCode로 어느 액티비티에서 온 것인지구분할 수 있음.
-        * */
+         * */
         val activityResultLauncher: ActivityResultLauncher<Intent> =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult())
             { result: ActivityResult ->
@@ -62,14 +43,19 @@ class CaptureResult : AppCompatActivity() {
 
 
 
-        viewBinding.captureResultBtnBack.setOnClickListener {
-            // intent에 저장된 사진 local-uri는 자동 소멸
-            // TODO: sharedPreference에 저장된 사진을 삭제해줘야함
-            SharedPreferencesUtil.removeString(getString(R.string.orig_pic_local))
-            SharedPreferencesUtil.removeString(getString(R.string.orig_pic_web))
+        //INFO: imgPath와 imgUri는 각각 String, Uri 데이터타입인 것 외에는 내부적인 String 값은 같다.
+        val imgPath = intent.getStringExtra(getString(R.string.orig_pic)) // 로컬 jpg 파일 URI : String
+        val imgUri = Uri.parse(imgPath) // URI 데이터타입 : Uri
+        val filename : String = imgUri.lastPathSegment.toString()
 
-            finish() // 사진 재촬영 가능 (Go back to the previous activity)
-        }
+
+        Glide.with(this)
+            .load(imgPath)
+            .into(viewBinding.captureResultImage)
+
+
+
+
 
 
 
@@ -80,10 +66,9 @@ class CaptureResult : AppCompatActivity() {
 
 
 
-
         viewBinding.captureResultBtnProceed.setOnClickListener {
-            //1)Firebase에 저장하고   2)웹 접근 가능한 URL 얻어 놓기->sharedPreference
-            uploadImage(imgUri)
+            //1)Firebase에 저장하고(o)   2)웹 접근 가능한 URL 얻어 놓기->sharedPreference (o)
+            uploadImage(imgUri, filename)
 
             //TODO: Activity_quiz 로 넘어감
             val intent = Intent(this@CaptureResult, QuizActivity::class.java)
@@ -91,30 +76,34 @@ class CaptureResult : AppCompatActivity() {
             activityResultLauncher.launch(intent)
         }
 
+
+        viewBinding.captureResultBtnBack.setOnClickListener {
+            // TODO: sharedPreference에 저장된 사진을 삭제
+            // intent에 저장된 사진 local-uri는 자동 소멸
+            SharedPreferencesUtil.removeString(getString(R.string.orig_pic_web_filename))
+            SharedPreferencesUtil.removeString(getString(R.string.orig_pic_web_downloadable_url))
+
+            finish() // 사진 재촬영 (Go back to the previous activity)
+        }
+
     }
 
 
 
     // on below line creating a function to upload our image.
-    fun uploadImage(fileUri: Uri) {
+    fun uploadImage(fileUri: Uri, fName : String) {
         if (fileUri != null) {
             val progressDialog = ProgressDialog(this)
             progressDialog.setTitle("Uploading...")
             progressDialog.setMessage("Uploading your image..")
             progressDialog.show()
 
-            // on below line creating a storage refrence for firebase storage and creating a child in it with
-            // random uuid.
-            val uploadedImageFileName: String = UUID.randomUUID().toString()
-
-            // 이미지 파일이름을 기억해둠 (sharedPreference)
-            //INFO : uploadedImageFileName 는 파일이름을 뿐, 확장자(.jpg)가 붙어있지 않음
-            SharedPreferencesUtil.putString(getString(R.string.orig_pic_local), uploadedImageFileName)
-
+            val fbFilepath = "og/" + fName
+            SharedPreferencesUtil.putString(getString(R.string.orig_pic_web_filename), fbFilepath)
 
             val ref: StorageReference = FirebaseStorage.getInstance().getReference()
-                .child("og/" + uploadedImageFileName);//uploadedImageFileName이름으로 파일 업로드
-            // on below line adding a file to our storage.
+                .child(fbFilepath);//fbFilepath 이름으로 파일 업로드
+
             var uploadTask = ref.putFile(fileUri!!)
             val urlTask = uploadTask.continueWithTask { task ->
                 if (!task.isSuccessful) {
@@ -132,12 +121,10 @@ class CaptureResult : AppCompatActivity() {
                     Log.d("[FB]downloadUri.toString()", downloadUri.toString())
 
                     //이 이미지 url을 기억해둬야함. (sharedPreference)
-                    SharedPreferencesUtil.putString(getString(R.string.orig_pic_web),downloadUri.toString())
-
-                    progressDialog.dismiss()
+                    SharedPreferencesUtil.putString(getString(R.string.orig_pic_web_downloadable_url),
+                        downloadUri.toString())
                     Toast.makeText(applicationContext, "[FB]이미지 업로드 성공", Toast.LENGTH_SHORT).show()
                 } else { //Handle failures
-                    progressDialog.dismiss()
                     Toast.makeText(applicationContext, "[FB]이미지 업로드 실패", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -147,6 +134,7 @@ class CaptureResult : AppCompatActivity() {
 
 
     override fun onResume() {
+        Log.d("CAPRES","onResume 들어왔음")
         super.onResume()
     }
 

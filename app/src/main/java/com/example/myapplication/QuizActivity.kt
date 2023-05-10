@@ -198,18 +198,21 @@ class QuizActivity : AppCompatActivity() {
             CROSS_EFFECT -> {
                 canvas.drawLine(it!!.width.toFloat()/5, it!!.height.toFloat()/5, it!!.width.toFloat()*4/5, it!!.height.toFloat()*4/5, paint)
                 it!!.foreground = BitmapDrawable(resources, bitmap)
+                Log.d("CROSS_EFFECT","CROSS_EFFECT")
             }
         }
     }
 
 
     override fun onDestroy() {
-        super.onDestroy()
+        //fixme :
+        // Caused by: kotlin.UninitializedPropertyAccessException: lateinit property dialog has not been initialized
         dialog?.dismiss()
 
         // Remove overlay layout from content view
         val rootView = window.decorView.findViewById<ViewGroup>(android.R.id.content)
         rootView.removeView(dialogLayout)
+        super.onDestroy()
     }
 
 

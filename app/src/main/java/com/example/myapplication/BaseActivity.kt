@@ -87,8 +87,8 @@ class BaseActivity : AppCompatActivity() {
     //private var imageCapture: ImageCapture? = null
     private var imageCapture: ImageCapture? = null
 
-    private var videoCapture: VideoCapture<Recorder>? = null
-    private var recording: Recording? = null
+//    private var videoCapture: VideoCapture<Recorder>? = null
+//    private var recording: Recording? = null
 
     private lateinit var cameraExecutor: ExecutorService
     private var isFacingFront = true
@@ -298,6 +298,7 @@ class BaseActivity : AppCompatActivity() {
             //1 API call(이미지 변환, 백그라운드 제거)
             //2 바뀐 이미지를 카메라 위에 띄우기
         }else{
+            //TODO 확인 후 삭제 요청
             Log.d(getString(R.string.log_key_universal), "표정변환 하기로 한 파일의 URL이 SharedPreference에 저장되어있지 않음. 다른 액티비티에서 저장이 안 됐거나 로직이 이상할 수 있음.")
         }
     }
