@@ -41,7 +41,7 @@ class QuizActivity : AppCompatActivity() {
     private lateinit var btn2 :  Button
     private lateinit var btn3 :  Button
     private lateinit var btn4 :  Button
-    private var ansButtons : Array<Button> = arrayOf(btn1, btn2, btn3, btn4)
+    private lateinit var ansButtons : Array<Button>
 
     private var isBtnClickable: Boolean = true
 
@@ -94,6 +94,8 @@ class QuizActivity : AppCompatActivity() {
         // generate a random number between 0 and 3 to choose the answer button
         val answerIndex = (0..3).random()
         //TODO: answerIndex에 정답 텍스트 세팅
+
+        ansButtons = arrayOf(btn1, btn2, btn3, btn4)
 
         // set the OnClickListener for each button (iterator)
         for (i in ansButtons.indices) {

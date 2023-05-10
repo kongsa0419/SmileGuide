@@ -22,8 +22,8 @@ public class SharedPreferencesUtil {
         editor.apply();
     }
 
-    public static String getString(String key, String defaultValue) {
-        return sharedPreferences.getString(key, defaultValue);
+    public static String getString(String key) {
+        return sharedPreferences.getString(key, "");
     }
 
     public static void removeString(String key){

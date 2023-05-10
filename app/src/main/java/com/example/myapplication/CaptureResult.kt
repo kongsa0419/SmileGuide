@@ -97,11 +97,8 @@ class CaptureResult : AppCompatActivity() {
 
     // on below line creating a function to upload our image.
     fun uploadImage(fileUri: Uri) {
-        // on below line checking weather our file uri is null or not.
         if (fileUri != null) {
-            // on below line displaying a progress dialog when uploading an image.
             val progressDialog = ProgressDialog(this)
-            // on below line setting title and message for our progress dialog and displaying our progress dialog.
             progressDialog.setTitle("Uploading...")
             progressDialog.setMessage("Uploading your image..")
             progressDialog.show()
@@ -116,7 +113,7 @@ class CaptureResult : AppCompatActivity() {
 
 
             val ref: StorageReference = FirebaseStorage.getInstance().getReference()
-                .child("og\\" + uploadedImageFileName);//uploadedImageFileName이름으로 파일 업로드
+                .child("og/" + uploadedImageFileName);//uploadedImageFileName이름으로 파일 업로드
             // on below line adding a file to our storage.
             var uploadTask = ref.putFile(fileUri!!)
             val urlTask = uploadTask.continueWithTask { task ->
