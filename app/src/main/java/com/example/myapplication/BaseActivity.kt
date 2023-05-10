@@ -63,9 +63,9 @@ class BaseActivity : AppCompatActivity() {
     companion object{
         
         //액티비티 간에 스위치, 정보교환을 위한 콜백 코드
-        const val INTENT_CODE_FROM_CAPTURE_TO_BASE = 9210
+        //어쩌면... 내 경우에는 단계별로 액티비티를 이동시키니까 이게 필요가 없을 수도 있어
+        const val INTENT_CODE_FROM_BASE_TO_CAPTURE = 9120
         const val INTENT_CODE_FROM_CAPTURE_TO_QUIZ = 9230
-        const val INTENT_CODE_FROM_QUIZ_TO_QUIZ = 9330
         const val INTENT_CODE_FROM_QUIZ_TO_BASE = 9310
 
         private const val TAG = "CameraXApp"
@@ -96,6 +96,7 @@ class BaseActivity : AppCompatActivity() {
 
 
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -115,18 +116,30 @@ class BaseActivity : AppCompatActivity() {
         }
 
 
-
+        /* // 필요없을 가능성이 있어서 일단 주석처리
         activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             result:ActivityResult->run {//TODO 구현
-                if (result.resultCode == INTENT_CODE_FROM_CAPTURE_TO_BASE) {
-                    // 액티비티 재시작 (사진 재촬영 기회 제공) => OK
-                } else if (result.resultCode == INTENT_CODE_FROM_QUIZ_TO_BASE) {
-                    //1 로딩창 + 각종 API 호출
-                    //2 이미지 띄워주기
+            //INTENT_CODE_FROM_QUIZ_TO_BASE 가 적절히 비교되는지 확인
+            if (result.resultCode == INTENT_CODE_FROM_QUIZ_TO_BASE) {
+                    //1 로딩 다이어로그와 함께 각종 API 호출
+                    //2 이미지 띄우기 (배경 블러 효과)
                 }
             }
         }
+        */
+
+
+
+        //TODO : sharedPreference에서 quiz->base로 넘어온 경우를 다뤄줌
+        // 새로운 액티비티가 만들어져 스택에 쌓일거기 때문에 onCreate() 호출됌
+        //1 로딩 다이어로그와 함께 각종 API 호출
+        //2 이미지 띄우기 (배경 블러 효과)
+
+
+
+
+
 
 
         // Set up the listeners for take photo and video capture buttons
@@ -239,13 +252,11 @@ class BaseActivity : AppCompatActivity() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    // NOTI: 사진 촬칵 하는 효과
-                    // preview 대신에 mainShutter써봐
+                    // 사진 촬칵 하는 효과
                     viewBinding.mainPreviewview.animate().alpha(0f).setDuration(50)
                         .withEndAction { viewBinding.mainPreviewview.alpha = 1f }
 
                     val msg = "Photo capture succeeded: ${output.savedUri}" //로컬파일위치
-                    //Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                     //content://media/external/images/media/1000004694
                     //val savedUri = output.savedUri ?: Uri.fromFile(File(output.savedUri.toString()))
@@ -255,7 +266,9 @@ class BaseActivity : AppCompatActivity() {
                     val intent = Intent(this@BaseActivity, CaptureResult::class.java).apply {
                         putExtra(getString(R.string.orig_pic), output.savedUri.toString())
                     }
-                    activityResultLauncher.launch(intent)
+                    startActivity(intent)
+                    //setResult(INTENT_CODE_FROM_BASE_TO_CAPTURE, intent)
+//                    activityResultLauncher.launch(intent)
                 }
             }
         )
@@ -288,20 +301,66 @@ class BaseActivity : AppCompatActivity() {
     }
 
 
-    /**이동한 액티비티에서 finish로 액티비티를 끝내는 경우, onResume()으로 돌아오게 됌*/
+
+    /**
+    onCreate(): This method is called when the activity is first created. It is where you should perform any initialization tasks, such as setting up the UI components or initializing any data structures.
+
+    onStart(): This method is called when the activity becomes visible to the user. At this stage, the activity is not yet interactive, but it is visible on the screen.
+        * onRestoreInstanceState()는 여기쯤 위치함
+        * 메모리릭 등으로 강제종료 된 경우에 파괴됐다가 다시 초기화됐을때 호출
+        * 따라서 맨 처음에는 이것이 호출되진 않음
+        * saved state는 Bundle 객체에 저장됌
+        *
+    onResume(): This method is called when the activity becomes fully interactive and is ready to accept user input. This is where you should start any animations, play sounds or start any other background tasks that should run while the activity is in the foreground.
+
+    onPause(): This method is called when the activity is no longer in the foreground and is partially obscured by another activity. At this stage, you should pause any ongoing animations, release any system resources that are not needed, and save any data that needs to be persisted.
+        * save necessary state here for onRestoreInstanceState()
+        *
+    onStop(): This method is called when the activity is no longer visible to the user. At this stage, you should release any resources that are not needed and stop any background tasks that are running.
+
+    onRestart(): This method is called when the activity is about to be restarted after it was stopped.
+
+    onDestroy(): This method is called when the activity is being destroyed, either because the user has navigated away from it or because the system needs to reclaim resources. At this stage, you should release any system resources that are being used, such as open files or network connections.
+     */
+
+    // INFO : 다음 액티비티에서 finishActivity()로 이 액티비티에 되돌아왔다면,
+    // INFO : onResume()이 호출되게 된다. 따라서 액티비티에서 intent로 넘어갈때, onPause()에서 저장해줄 것들을 저장해줘야한다.
+    // INFO : onCreate() or onRestoreInstanceState() = 액티비티가 destroyed된 후 처음으로 생겨났는지, destroyed된 후 재창출된 것인지
+
+
+
+    /**이동한 액티비티에서 finish로 액티비티를 끝내는 경우, onResume()으로 돌아오게 됌
+     * */
+    //TODO finish()인 경우 처리 :: result -> base
+    // finish()로 왔을 경우에 그대로 카메라만 쓰면 되는거 아닌가? 다이어로그도 당연히 안뜰거고
     override fun onResume() {
         super.onResume()
+        /*
         val origPicture = SharedPreferencesUtil.getString(getString(R.string.orig_pic))
 
         if(origPicture != null){
-            //TODO :
+            //TODO : 아무것도 할게 없지않나?
             //1 API call(이미지 변환, 백그라운드 제거)
-            //2 바뀐 이미지를 카메라 위에 띄우기
+            //2 SharedPreference에 저장해둔 바뀐 이미지를 카메라 위에 띄우기
         }else{
             //TODO 확인 후 삭제 요청
             Log.d(getString(R.string.log_key_universal), "표정변환 하기로 한 파일의 URL이 SharedPreference에 저장되어있지 않음. 다른 액티비티에서 저장이 안 됐거나 로직이 이상할 수 있음.")
         }
+        */
     }
+
+
+
+
+
+
+    // Intent로 다음 액티비티로 넘어가기 전에, 저장해둬야할 것들을 저장하는 구간
+    override fun onPause() {
+        super.onPause()
+    }
+
+
+
 
 
     override fun onDestroy() {

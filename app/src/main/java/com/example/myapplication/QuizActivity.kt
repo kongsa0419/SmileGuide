@@ -17,7 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import com.example.myapplication.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_QUIZ
 import com.example.myapplication.BaseActivity.Companion.INTENT_CODE_FROM_QUIZ_TO_BASE
-import com.example.myapplication.BaseActivity.Companion.INTENT_CODE_FROM_QUIZ_TO_QUIZ
 import com.example.myapplication.databinding.ActivityQuizBinding
 import org.w3c.dom.Text
 
@@ -51,13 +50,12 @@ class QuizActivity : AppCompatActivity() {
         viewBinding = ActivityQuizBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-
-        //TODO:
+        /* // 쓰지 않아도 될듯
         activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if(result.resultCode == INTENT_CODE_FROM_QUIZ_TO_QUIZ){
-                //restart()? activity?
+            if(result.resultCode == INTENT_CODE_FROM_CAPTURE_TO_QUIZ){ // capture->quiz로 넘어온 인텐트
+
             }
-        }
+        }*/
 
         init() // onClickListener(), ... 등 따로 빼냄
     }
@@ -153,21 +151,24 @@ class QuizActivity : AppCompatActivity() {
             nextBtn.setText("표정연습 하러가기")
             //2 setOnclickListener 설정
             nextBtn.setOnClickListener{
-                //
                 val intent : Intent = Intent(this@QuizActivity, BaseActivity::class.java)
-                setResult(INTENT_CODE_FROM_QUIZ_TO_BASE, intent)
-                activityResultLauncher.launch(intent)
+                startActivity(intent)
+//                setResult(INTENT_CODE_FROM_QUIZ_TO_BASE, intent)
+//                activityResultLauncher.launch(intent)
             }
 
-        }else{ // 틀렸을 경우 fixme 새롭게 다른 문제로 버튼 텍스트들을 초기화
+        }else{ // 틀렸을 경우 TODO 새롭게 다른 문제로 버튼 텍스트들을 초기화
             //1 텍스트 설정
             resultStatusTV.setText("오답! 틀렸습니다!")
             resultExplTV.setText(getString(R.string.Lorem_Ipsum))
             nextBtn.setText("퀴즈 재도전하기")
             //2 setOnclickListener 설정
             nextBtn.setOnClickListener{
-                recreate() //액티비티 재시작
                 dialog.dismiss()
+                // Remove overlay layout from content view
+                val rootView = window.decorView.findViewById<ViewGroup>(android.R.id.content)
+                rootView.removeView(dialogLayout)
+                recreate() //액티비티 재시작
             }
         }
     }
@@ -204,15 +205,31 @@ class QuizActivity : AppCompatActivity() {
     }
 
 
-    override fun onDestroy() {
-        //fixme :
-        // Caused by: kotlin.UninitializedPropertyAccessException: lateinit property dialog has not been initialized
-        dialog?.dismiss()
 
-        // Remove overlay layout from content view
-        val rootView = window.decorView.findViewById<ViewGroup>(android.R.id.content)
-        rootView.removeView(dialogLayout)
+
+    // Intent로 다음 액티비티로 넘어가기 전에, 저장해둬야할 것들을 저장하는 구간
+    override fun onPause() {
+        super.onPause()
+        //TODO 기존 버튼에 텍스트 대입, 틀렸던 모먼트 등 유지
+    }
+
+
+
+
+
+    // 다시 이 액티비티로 화면이 돌아왔을때 저장해뒀던 텍스트를 놔야함
+    override fun onResume() {
+        super.onResume()
+        //TODO onPause()에서 저장해뒀던 것들을 다시 불러와서 입력
+    }
+
+
+
+
+
+    override fun onDestroy() {
         super.onDestroy()
+        //TODO onPause()에서 저장해뒀던 것들을 삭제
     }
 
 
