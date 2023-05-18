@@ -44,19 +44,27 @@
             app:layout_constraintTop_toTopOf="@id/main_upperbar" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-
-
-<!--    camerax preview -->
-    <androidx.camera.view.PreviewView
-        android:id="@+id/main_previewview"
+    <FrameLayout
+        android:id="@+id/main_fl_previewview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/main_bottombar"
-        app:layout_constraintTop_toBottomOf="@+id/main_upperbar"/>
+        app:layout_constraintTop_toBottomOf="@+id/main_upperbar">
 
 
+        <!--    camerax preview -->
+        <androidx.camera.view.PreviewView
+            android:id="@+id/main_previewview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
+        <!--  transparent imageview      -->
+        <ImageView
+            android:id="@+id/main_pic_trans"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </FrameLayout>
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -65,7 +73,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/main_previewview">
+        app:layout_constraintTop_toBottomOf="@+id/main_fl_previewview">
 
         <ImageView
             android:id="@+id/main_photo"

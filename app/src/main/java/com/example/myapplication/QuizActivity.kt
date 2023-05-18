@@ -130,13 +130,11 @@ class QuizActivity : AppCompatActivity() {
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.WRAP_CONTENT
         )
+    }
 
 
-
-        }
-
-
-    // TODO : 3 각 뷰들의 text를 설정해주고, setOnclickListener 설정
+    // TODO : 3 문제가 틀리고 맞았을 경우에 따라서
+    //  각 뷰들의 text를 설정해주고, setOnclickListener 설정
     private fun initDialogComponents(dialogLayout: View?, b: Boolean) {
         val resultStatusTV : TextView = dialogLayout!!.findViewById<Button>(R.id.dialog_quiz_result_status)
         val resultExplTV : TextView = dialogLayout!!.findViewById<Button>(R.id.dialog_quiz_result_expl)
@@ -151,10 +149,12 @@ class QuizActivity : AppCompatActivity() {
             nextBtn.setText("표정연습 하러가기")
             //2 setOnclickListener 설정
             nextBtn.setOnClickListener{
+                dialog.dismiss()
                 val intent : Intent = Intent(this@QuizActivity, BaseActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT) // 기존에 존재하던 액티비티라면 해당 액티비티로 돌아옴
+                //TODO: 변환된 사진 보내주기 (well...SharedPreference에 저장되어 있지 않나?) 확인해야됌
+                intent.putExtra(getString(R.string.trns_pic/**고칠 것*/), "임의값")
                 startActivity(intent)
-//                setResult(INTENT_CODE_FROM_QUIZ_TO_BASE, intent)
-//                activityResultLauncher.launch(intent)
             }
 
         }else{ // 틀렸을 경우 TODO 새롭게 다른 문제로 버튼 텍스트들을 초기화

@@ -5,24 +5,26 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
 import com.example.myapplication.databinding.ActivityMainBinding
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
@@ -119,7 +121,7 @@ class BaseActivity : AppCompatActivity() {
         /* // 필요없을 가능성이 있어서 일단 주석처리
         activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
-            result:ActivityResult->run {//TODO 구현
+            result:ActivityResult->run {
             //INTENT_CODE_FROM_QUIZ_TO_BASE 가 적절히 비교되는지 확인
             if (result.resultCode == INTENT_CODE_FROM_QUIZ_TO_BASE) {
                     //1 로딩 다이어로그와 함께 각종 API 호출
@@ -140,7 +142,7 @@ class BaseActivity : AppCompatActivity() {
 
 
 
-
+        viewBinding.mainPicTrans.alpha = 0.0f
 
         // Set up the listeners for take photo and video capture buttons
         //viewBinding.mainPreviewview
@@ -232,14 +234,20 @@ class BaseActivity : AppCompatActivity() {
             }
         }
 
+        val metadata = ImageCapture.Metadata()
+        metadata.setReversedHorizontal(true); // This method will fix mirror issue
         // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(
-                contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            )
-            .build()
+
+        val outputOptionsBuilder = ImageCapture.OutputFileOptions.Builder(
+            contentResolver,
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentValues
+        )
+        if (isFacingFront) {
+            outputOptionsBuilder.setMetadata(metadata)
+        }
+        val outputOptions = outputOptionsBuilder.build()
+
 
         // Set up image capture listener, which is triggered after photo has
         // been taken
@@ -261,18 +269,16 @@ class BaseActivity : AppCompatActivity() {
                     //content://media/external/images/media/1000004694
                     //val savedUri = output.savedUri ?: Uri.fromFile(File(output.savedUri.toString()))
 
-                    //TODO : intent 처리 with registerForActivityResult
                     //INFO : 여기서 orig_pic은 intent에 저장하는 거지, sharedPreference에 저장하는 것이 아님
                     val intent = Intent(this@BaseActivity, CaptureResult::class.java).apply {
                         putExtra(getString(R.string.orig_pic), output.savedUri.toString())
                     }
                     startActivity(intent)
-                    //setResult(INTENT_CODE_FROM_BASE_TO_CAPTURE, intent)
-//                    activityResultLauncher.launch(intent)
                 }
             }
         )
     }
+
 
     private fun captureVideo() {}
 
@@ -329,12 +335,42 @@ class BaseActivity : AppCompatActivity() {
 
 
 
+
+
+
+    // 기존 액티비티 스택에 있던 BaseActivity를 스택 맨 위로 올리고 onResume()호출
+    // onNewIntent() → onResume()
+    // TODO: QuizActivity에서 넘어온 사진을 흐릿하게 바꾸어 띄워주기
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null) {
+            var imgPath =
+                SharedPreferencesUtil.getString(getString(R.string.orig_pic_web_filename)) //firebase url
+            Glide.with(this)
+                .load(imgPath)
+                .into(viewBinding.mainPicTrans)
+
+            viewBinding.mainPicTrans.alpha = 1.0f
+
+            Toast.makeText(this, imgPath, Toast.LENGTH_SHORT).show()
+            val data = intent.getStringExtra(getString(R.string.trns_pic))
+
+            if (data != null) {
+            }
+        }
+    }
+
+
+
+
+
     /**이동한 액티비티에서 finish로 액티비티를 끝내는 경우, onResume()으로 돌아오게 됌
      * */
     //TODO finish()인 경우 처리 :: result -> base
     // finish()로 왔을 경우에 그대로 카메라만 쓰면 되는거 아닌가? 다이어로그도 당연히 안뜰거고
     override fun onResume() {
         super.onResume()
+        viewBinding.mainPicTrans.alpha = 1.0f
         /*
         val origPicture = SharedPreferencesUtil.getString(getString(R.string.orig_pic))
 
@@ -348,7 +384,6 @@ class BaseActivity : AppCompatActivity() {
         }
         */
     }
-
 
 
 
