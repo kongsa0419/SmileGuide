@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.FileUtils
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -20,6 +21,7 @@ import com.example.myapplication.databinding.ActivityCaptureResultBinding
 import com.example.myapplication.dto.AilabApiResponse
 import com.example.myapplication.retrofit.RetrofitApi
 import com.example.myapplication.service.AilabtoolsService
+import com.example.myapplication.util.ContentUriRequestBody
 import com.example.myapplication.util.ImageUploader
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -100,56 +102,42 @@ class CaptureResult : AppCompatActivity() {
         3. RequestBody를 만들어 준다  mediatype는 이미지로..
         4. 멀티파츠 바디를 만들어준다 */
 
+        /**
+         * File을 다룰때, 파일 경로가 절대적인지, 혹은 상대적인지를 고려해서 절대적인 것으로 바꿔줘야함.
+         * */
+
         // TODO: Navigate to the gallery
         viewBinding.captureResultBtnGallery.visibility = View.VISIBLE //INFO (testing)
         viewBinding.captureResultBtnGallery.setOnClickListener {
-            val BASE_URL = "https://www.ailabapi.com/"
-
-            val retrofit = Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create())
-                .build()
-
-            val apiService = retrofit.create(AilabtoolsService::class.java)
-
-            val file = File(imgPath)
             val fileName = filename+".jpg"
             val option ="whiteBK"
 
-            val requestFile = file.asRequestBody("multipart/form-data".toMediaType())
-            val imagePart = MultipartBody.Part.createFormData("image", file.name, requestFile)
-
-            val optionReqBody = option.toRequestBody("text/plain".toMediaType())
+            val requestFile = ContentUriRequestBody(applicationContext, imgUri).toFormData()
+            val requestOption = option.toRequestBody("multipart/form-data".toMediaType())
 
 
-            val call = apiService.getBackRmvdImg(imagePart, optionReqBody)
+            val call = RetrofitApi.getAilabtoolsService.getBackRmvdImg(requestFile, requestOption) /*apiService.getBackRmvdImg(imagePart, optionReqBody)*/
             call.enqueue(object: Callback<AilabApiResponse> {
-                override fun onResponse(
-                    call: retrofit2.Call<AilabApiResponse>,
-                    response: Response<AilabApiResponse>
-                ) {
+                override fun onResponse(call: retrofit2.Call<AilabApiResponse>, response: Response<AilabApiResponse>) {
                     Toast.makeText(applicationContext,"api성공",Toast.LENGTH_LONG).show()
                     Log.d("TAG", "api성공")
+                    if(response.isSuccessful)
+                    {
+                        Toast.makeText(applicationContext,"222api성공222",Toast.LENGTH_LONG).show()
+                        Log.d("TAG", "데이터도 성공리에 도착!!" + response.body()!!.data!!.image_url.toString())
+                    }
                 }
 
-                override fun onFailure(
-                    call: retrofit2.Call<AilabApiResponse>,
-                    t: Throwable)
+                override fun onFailure(call: retrofit2.Call<AilabApiResponse>, t: Throwable)
                 {
                     //게속 여기로 들어옴...
+                    Log.e("TAG", t.message.toString())
                     Toast.makeText(applicationContext,"api실패",Toast.LENGTH_LONG).show()
                     // API 요청 실패 시의 처리
                     Log.d("TAG", "api실패")
                 }
             })
         }
-
-
-
-
-
-
-
-
-
 
         viewBinding.captureResultBtnProceed.setOnClickListener {
             //1)Firebase에 저장하고(o)   2)웹 접근 가능한 URL 얻어 놓기->sharedPreference (o)
@@ -172,93 +160,7 @@ class CaptureResult : AppCompatActivity() {
 
 
 
-    // Function to call the API using Retrofit
-
-
-
-
-
-    /* API 요청 함수(Volley)
-    fun requestPortraitBackgroundRemoval(file: File) {
-        val bitmap = ImageUtil.fileToBitmap(file)
-        val byteArray = ImageUtil.bitmapToByteArray(bitmap!!)
-
-        val url = "https://www.ailabapi.com/api/cutout/portrait/portrait-background-removal"
-        val volleyRequest = object : StringRequest(
-            Request.Method.POST, url,
-            com.android.volley.Response.Listener<String> { response ->
-                // 요청에 대한 응답 처리
-                val jsonResponse = JSONObject(response)
-                Toast.makeText(applicationContext, "volley 성공!", Toast.LENGTH_LONG).show()
-                // 응답 데이터를 처리하는 코드 추가
-                val data = jsonResponse.getJSONObject("data")
-                val url : String = data.getString("image_url")
-                Log.d("TAG", url)
-                viewBinding.captureResultImage.setImageURI(Uri.parse(url))
-                Toast.makeText(applicationContext, "이미지 세팅됐나?", Toast.LENGTH_LONG).show()
-            },
-            com.android.volley.Response.ErrorListener { error ->
-                // 요청에 대한 오류 처리
-                error.printStackTrace()
-                Toast.makeText(applicationContext, "volley 실패ㅠㅠ", Toast.LENGTH_LONG).show()
-            }) {
-            override fun getHeaders(): MutableMap<String, String> {
-                val headers = HashMap<String, String>()
-                headers["Content-Type"] = "multipart/form-data"
-                headers["ailabapi-api-key"] = BuildConfig.api_key_ailabtools
-                return headers
-            }
-
-            override fun getBodyContentType(): String {
-                return "application/octet-stream"
-            }
-
-            override fun getBody(): ByteArray {
-                return byteArray
-            }
-        }
-
-        val requestQueue = Volley.newRequestQueue(applicationContext) // context는 액티비티나 애플리케이션의 컨텍스트입니다.
-        requestQueue.add(volleyRequest)
-    }
-    */
-
-    /* API 요청 함수(Okhttp)
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getBackgroundRemovedImg(filePath: String) {
-        // Create a map of headers to include in the request
-        val headers: MutableMap<String, String> = HashMap()
-        headers["ailabapi-api-key"] = BuildConfig.api_key_ailabtools.toString()
-
-        // Create a File object representing the image to upload
-        val imageFile = File(filePath)
-
-        // Call the uploadImageWithHeader method
-        try {
-            val response: okhttp3.Response? = ImageUploader.uploadImageWithHeader(
-                "https://www.ailabapi.com/api/portrait/effects/emotion-editor",
-                imageFile,
-                headers
-            )
-
-            // Handle the server's response
-            if (response!!.isSuccessful) {
-                println("Image uploaded successfully!")
-                //TODO
-                Toast.makeText(applicationContext, "배경제거 성공!", Toast.LENGTH_SHORT).show()
-                Log.d("TAG", response.body.toString())
-            } else {
-                println("Error uploading image: " + response!!.code + " " + response.message)
-                Toast.makeText(applicationContext, "배경제거 실패!", Toast.LENGTH_SHORT).show()
-                Log.d("TAG", response.body.toString())
-            }
-        } catch (e: IOException) {
-            System.err.println("Error uploading image: " + e.message)
-        }
-    }*/
-
-
-    //return type: file Url
+    
 
 
     // on below line creating a function to upload our image.
