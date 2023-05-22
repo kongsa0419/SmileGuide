@@ -13,11 +13,14 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Rational
+import android.util.Size
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
+import androidx.camera.core.impl.utils.AspectRatioUtil
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -193,7 +196,9 @@ class BaseActivity : AppCompatActivity() {
 //                    })
 //                }
 
-            imageCapture = ImageCapture.Builder().build()
+            imageCapture = ImageCapture.Builder()
+                .setTargetResolution(Size(1275,1900))
+                .build()
 
             // Select back camera as a default
             val cameraSelector = if(isFacingFront) {
