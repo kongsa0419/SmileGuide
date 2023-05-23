@@ -4,48 +4,19 @@ import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.FileUtils
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.android.volley.Request
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 import com.bumptech.glide.Glide
 import com.example.myapplication.databinding.ActivityCaptureResultBinding
-import com.example.myapplication.dto.AilabApiResponse
-import com.example.myapplication.retrofit.RetrofitApi
-import com.example.myapplication.service.AilabtoolsService
-import com.example.myapplication.util.ContentUriRequestBody
-import com.example.myapplication.util.ImageUploader
+import com.example.myapplication.util.SharedPreferencesUtil
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.annotations.SerializedName
-import okhttp3.MediaType
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody
+import kotlinx.coroutines.*
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.create
-import okhttp3.MultipartBody.Builder
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.Callback
-import retrofit2.converter.gson.GsonConverterFactory
-import java.io.File
-import java.io.IOException
 import java.util.*
 
 
@@ -58,7 +29,12 @@ class CaptureResult : AppCompatActivity() {
     private lateinit var imgUri : Uri
     private lateinit var filename : String
 
+    private lateinit var imgBackX : String // url
+
+    private lateinit var imgFaceChanged : String //base64 encoded
+
     private val ailabtools_api_key : String = BuildConfig.api_key_ailabtools
+
 
 
     @SuppressLint("NewApi")
@@ -108,44 +84,35 @@ class CaptureResult : AppCompatActivity() {
 
         // TODO: Navigate to the gallery
         viewBinding.captureResultBtnGallery.visibility = View.VISIBLE //INFO (testing)
+
         viewBinding.captureResultBtnGallery.setOnClickListener {
-            val fileName = filename+".jpg"
-            val option ="whiteBK"
 
-            val requestFile = ContentUriRequestBody(applicationContext, imgUri).toFormData()
-            val requestOption = option.toRequestBody("multipart/form-data".toMediaType())
-
-
-            val call = RetrofitApi.getAilabtoolsService.getBackRmvdImg(requestFile, requestOption) /*apiService.getBackRmvdImg(imagePart, optionReqBody)*/
-            call.enqueue(object: Callback<AilabApiResponse> {
-                override fun onResponse(call: retrofit2.Call<AilabApiResponse>, response: Response<AilabApiResponse>) {
-                    Toast.makeText(applicationContext,"api성공",Toast.LENGTH_LONG).show()
-                    Log.d("TAG", "api성공")
-                    if(response.isSuccessful)
-                    {
-                        Toast.makeText(applicationContext,"222api성공222",Toast.LENGTH_LONG).show()
-                        Log.d("TAG", "데이터도 성공리에 도착!!" + response.body()!!.data!!.image_url.toString())
-                    }
-                }
-
-                override fun onFailure(call: retrofit2.Call<AilabApiResponse>, t: Throwable)
-                {
-                    //게속 여기로 들어옴...
-                    Log.e("TAG", t.message.toString())
-                    Toast.makeText(applicationContext,"api실패",Toast.LENGTH_LONG).show()
-                    // API 요청 실패 시의 처리
-                    Log.d("TAG", "api실패")
-                }
-            })
         }
+
+
+
+
+
+
+
+
+
 
         viewBinding.captureResultBtnProceed.setOnClickListener {
             //1)Firebase에 저장하고(o)   2)웹 접근 가능한 URL 얻어 놓기->sharedPreference (o)
             uploadImage(imgUri, filename)
 
             val intent = Intent(this@CaptureResult, QuizActivity::class.java)
+            intent.putExtra("imgUri",imgUri)
             startActivity(intent)
         }
+
+
+
+
+
+
+
 
 
         viewBinding.captureResultBtnBack.setOnClickListener {
@@ -157,10 +124,6 @@ class CaptureResult : AppCompatActivity() {
 
     }
 
-
-
-
-    
 
 
     // on below line creating a function to upload our image.
@@ -224,5 +187,6 @@ class CaptureResult : AppCompatActivity() {
     fun getFBStorageReference(prefix: String, filename: String): StorageReference {
         return FirebaseStorage.getInstance().getReference().child(prefix + "\\" + filename);
     }
+
 
 }
