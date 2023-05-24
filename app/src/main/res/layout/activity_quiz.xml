@@ -54,35 +54,43 @@
             android:id="@+id/quiz_question_statement"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toTopOf="@+id/quiz_question_section"
-            app:layout_constraintStart_toStartOf="@+id/quiz_question_section"
+            android:maxWidth="780px"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="8dp"
+            android:layout_marginBottom="8dp"
             android:text="@string/sample_question"
             android:textColor="@color/question_orange"
-            android:maxWidth="780px"
-            android:paddingRight="30dp"
-            android:paddingLeft="10dp"
-            android:paddingVertical="8dp"
-            android:textSize="12sp"
-            />
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/quiz_question_section"
+            app:layout_constraintEnd_toEndOf="@+id/quiz_question_section"
+            app:layout_constraintStart_toStartOf="@+id/quiz_question_section"
+             />
         <TextView
             android:id="@+id/quiz_question_section"
             android:layout_width="780px"
             android:layout_height="wrap_content"
             android:paddingHorizontal="20dp"
             android:paddingVertical="10dp"
+            android:layout_marginBottom="20dp"
             android:background="@drawable/rounded_corner_gray_question"
-            android:alpha="0.6"
+            android:alpha="0.9"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/quiz_answer_section"
-            android:layout_marginTop="30dp"
-            android:text="@string/Lorem_Ipsum"
+            app:layout_constraintBottom_toTopOf="@+id/section_divider"
+            android:text="@string/sample_question"
             android:textAlignment="center"
             android:gravity="center"
-            android:maxHeight="200dp"
             android:scrollbars="vertical"
-            android:textSize="12sp"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/section_divider"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.47"
             />
         
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -94,13 +102,13 @@
             android:paddingVertical="30dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/quiz_question_section"
-            app:layout_constraintBottom_toBottomOf="parent">
+            app:layout_constraintTop_toBottomOf="@+id/section_divider"
+            >
 
             <Button
                 android:id="@+id/quiz_answer_btn1"
-                android:layout_height="50dp"
-                android:layout_width="100dp"
+                android:layout_height="58dp"
+                android:layout_width="120dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/quiz_answer_btn2"
                 app:layout_constraintTop_toTopOf="parent"
@@ -113,8 +121,8 @@
 
             <Button
                 android:id="@+id/quiz_answer_btn2"
-                android:layout_height="50dp"
-                android:layout_width="100dp"
+                android:layout_height="58dp"
+                android:layout_width="120dp"
                 app:layout_constraintStart_toEndOf="@+id/quiz_answer_btn1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -127,8 +135,8 @@
 
             <Button
                 android:id="@+id/quiz_answer_btn3"
-                android:layout_height="50dp"
-                android:layout_width="100dp"
+                android:layout_height="58dp"
+                android:layout_width="120dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/quiz_answer_btn4"
                 app:layout_constraintTop_toBottomOf="@+id/quiz_answer_btn1"
@@ -141,8 +149,8 @@
 
             <Button
                 android:id="@+id/quiz_answer_btn4"
-                android:layout_height="50dp"
-                android:layout_width="100dp"
+                android:layout_height="58dp"
+                android:layout_width="120dp"
                 app:layout_constraintStart_toEndOf="@+id/quiz_answer_btn3"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/quiz_answer_btn2"

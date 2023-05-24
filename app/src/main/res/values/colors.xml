@@ -15,4 +15,10 @@
     <color name="question_orange">#ff4800</color>
     <color name="quiz_dialog_correction_clickable_yellow">#FFDEC0</color>
     <color name="grey_transparent">#DBECECEC</color>
+
+
+    <color name="bright_blue">#1976D2</color>
+    <color name="bright_orange">#F48024</color>
+    <color name="dark_gray">#3D4148</color>
+    <color name="mid_gray">#979797</color>
 </resources>

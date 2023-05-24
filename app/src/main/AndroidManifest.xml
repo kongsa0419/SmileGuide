@@ -22,23 +22,33 @@
         android:icon="@drawable/ic_smileguide"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:requestLegacyExternalStorage="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="31">
         <activity
-            android:name=".QuizActivity"
+            android:name=".activity.QuizActivity"
             android:exported="false" />
         <activity
-            android:name=".CaptureResult"
+            android:name=".activity.CaptureResult"
             android:exported="false" />
         <activity
-            android:name=".BaseActivity"
+            android:name=".activity.BaseActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.myapplication"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" />
+        </provider>
 <!--        <activity-->
 <!--            android:name=".MainActivity"-->
 <!--            android:exported="true">-->
