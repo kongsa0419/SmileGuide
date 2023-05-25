@@ -1,14 +1,17 @@
-package com.example.myapplication
+package com.example.myapplication.activity
 
+import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.database.Cursor
+import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -19,27 +22,34 @@ import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.createBitmap
+import androidx.core.net.toFile
+import androidx.core.net.toUri
+import com.example.myapplication.R
 import com.example.myapplication.databinding.ActivityQuizBinding
 import com.example.myapplication.dto.AilabApiResponse
 import com.example.myapplication.dto.QuizSetItem
 import com.example.myapplication.retrofit.RetrofitApi
 import com.example.myapplication.util.ContentUriRequestBody
-import com.example.myapplication.util.ImageUtil
-import com.example.myapplication.util.ProgressDialogUtil.hideProgressDialog
-import com.example.myapplication.util.ProgressDialogUtil.showProgressDialog
+import com.example.myapplication.util.SharedPreferencesUtil
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.File
-import java.io.IOException
+import java.io.*
+import java.net.HttpURLConnection
+import java.net.MalformedURLException
+import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 //TODO(5/10) : 인텐트 화면전환 구현
 // 뒤로가기 버튼 처리
@@ -61,17 +71,24 @@ class QuizActivity : AppCompatActivity() {
     }
 
 
+    private val TAG: String? = "QUIZ_ACTIVITY LOGGING.... .... ..."
+
     private lateinit var dialogLayout: View //custom dialog
     private lateinit var viewBinding: ActivityQuizBinding
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent> //
 
     private lateinit var dialog: AlertDialog //dialog
 
-    private lateinit var imgUri : Uri
+    private var imgUri : Uri ?= null
     private var quizIndex : Int = 0
     private var quizItem : QuizSetItem ?= null
 
+    // Declaring a Bitmap local
+    var mImage: Bitmap? = null
 
+    private lateinit var imgBackX : String // url
+
+    private var imgFaceChanged : String ?= null //base64 encoded
 
 
     private lateinit var btn1 :  Button
@@ -87,16 +104,22 @@ class QuizActivity : AppCompatActivity() {
         viewBinding = ActivityQuizBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        imgUri = Uri.parse(intent.getStringExtra("imgUri").toString()) //.toString()
 
         /* // 쓰지 않아도 될듯
         activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if(result.resultCode == INTENT_CODE_FROM_CAPTURE_TO_QUIZ){ // capture->quiz로 넘어온 인텐트
+            if(result.resultCode == Activity.RESULT_OK || result.resultCode == INTENT_CODE_FROM_CAPTURE_TO_QUIZ){ // capture->quiz로 넘어온 인텐트
 
             }
-        }*/
+            else Log.d("TAG", "imgUri is null")
+        }
+        */
 
+        //TODO 주석해제
+        // imgUri = Uri.parse(SharedPreferencesUtil.getString(getString(R.string.orig_pic)))
 
+        //TODO 왜 intent를 받아오지 못하는지 확인
+//        val uri = intent.getStringExtra("imgUri")
+//        imgUri = Uri.parse(uri)
 
         viewBinding.quizBtnBack.setOnClickListener(){ finish() }
         viewBinding.quizBtnGallery.setOnClickListener(){/*TODO:*/ }
@@ -229,59 +252,50 @@ class QuizActivity : AppCompatActivity() {
 
 
         //code refactoring 필요
-        if(b){ //정답일 경우 fixme 표정연습하는 다음 단계로 넘어감
+        if(b){ //정답일 경우
             //1 텍스트 설정
             resultStatusTV.text = "정답! 훌륭합니다!"
             resultExplTV.text = quizItem!!.explanation
             nextBtn.text = "표정연습 하러가기"
 
-            //TODO("코루틴을 적용해서 이미지 만들어놓기, 로직 정리")
+
             //2 setOnclickListener 설정
             nextBtn.setOnClickListener{
                 dialog.dismiss()
 
-                /*
-                //Create a Channel to communicate between the apiThread and the mainThread
-                val channel = Channel<Pair<File, /*base64-encoded*/String>>()
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        // Step 1: Call the first API on the apiThread
-                        showProgressDialog(applicationContext, "[API call]\nbackground-removal")
-                        val imageUrl : String = withContext(Dispatchers.IO){
-                            callBackgroundRemove()
-                        }
-                        hideProgressDialog()
-
-                        // Step 2: Convert image URL to File format and call the second API on the apiThread
-                        showProgressDialog(applicationContext, "[API call]\nchange-facial-expr")
-                        val imageFile : File = withContext(Dispatchers.IO) {
-                            convertToFile(imageUrl!!)
+                //ProgressDialogUtil.showProgressDialog(applicationContext, "API 통신 중 ...")
+                CoroutineScope(Dispatchers.IO).launch{
+                    try{
+//                        val backX : String = callBackgroundRemove() //인물 배경제거 API
+                        val backX : String = "https://ai-result-rapidapi.ailabtools.com/cutout/segmentBody/2023-05-24/134739-242adab8-eadc-a923-6085-28b6dbf058a0-1684936059.jpg"
+                        val file : File = convertToFile(applicationContext, backX)
+                        suspend {
+                            val file :File = imgUri!!.toFile()
                         }
 
+                        val chnged  = callChageFacialExpr(file!!, 0/**/) // API 2 call
+                        imgFaceChanged = chnged
 
-                        val secondApiResponse : String  = withContext(Dispatchers.IO) {
-                            callChageFacialExpr(imageFile, BIG_LAUGH) /*Base64-encoded*/
+                        withContext(Dispatchers.Main){
+                            SharedPreferencesUtil.putString(getString(R.string.trns_pic), chnged)
                         }
-                        hideProgressDialog()
 
-                        //await()?
-                        // Send the result back to the mainThread via the channel
-                        channel.send(Pair(imageFile, secondApiResponse))
-                    } catch (e: Exception) {
-                        // Handle any exceptions that occurred during API calls
+                        withContext(Dispatchers.Main){
+                            val intent : Intent = Intent(this@QuizActivity, BaseActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT) // 기존에 존재하던 액티비티라면 해당 액티비티로 돌아옴
+                            if(imgFaceChanged != null) intent.putExtra(getString(R.string.trns_pic),/*이미지처리 완료된 Base64-decoded-image*/chnged)
+                            startActivity(intent)
+                            Log.d("TAG", "API2-성공!!! "+imgFaceChanged!!)
+//                            ProgressDialogUtil.hideProgressDialog()
+                        }
+                    }catch (e:java.lang.Exception){
                         e.printStackTrace()
-                        Log.e("TAG",e.printStackTrace().toString())
                     }
-                }*/
-
-
-                val intent : Intent = Intent(this@QuizActivity, BaseActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT) // 기존에 존재하던 액티비티라면 해당 액티비티로 돌아옴
-                //TODO: 변환된 사진 보내주기 (well...SharedPreference에 저장되어 있지 않나?) 확인해야됌
-                intent.putExtra(getString(R.string.trns_pic/**고칠 것*/), "임의값")
-                startActivity(intent)
+                }
             }
+
+
+
 
         }else{ // 틀렸을 경우 TODO 새롭게 다른 문제로 버튼 텍스트들을 초기화
             //1 텍스트 설정
@@ -298,33 +312,98 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 
-    suspend private fun convertToFile(imageUrl: String /*url->File*/) : File {
-        return ImageUtil.downloadImage(imageUrl)
+
+
+
+
+    private suspend fun convertToFile(context: Context, url: String): File =
+        withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection?= null
+        var inputStream: InputStream ?= null
+        var outputStream: FileOutputStream ?= null
+        var file: File?= null
+        try {
+            val urlConnection = URL(url)
+            connection = urlConnection.openConnection() as HttpURLConnection
+            connection.connect()
+
+            inputStream = connection.inputStream
+
+            val fileName = generateUniqueFileName() // Generate a unique file name
+            val contentResolver: ContentResolver = context.contentResolver
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+            }
+            val contentUri: Uri? = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            file = File(getFilePathFromContentUri(context, contentUri))
+            outputStream = FileOutputStream(file)
+            val buffer = ByteArray(1024)
+            var bytesRead: Int
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                outputStream.write(buffer, 0, bytesRead)
+            }
+        } catch (e: Exception) {
+            println(e.message)
+        }
+        finally {
+            inputStream?.close()
+            outputStream?.close()
+            connection?.disconnect()
+        }
+        file!!
     }
 
-    suspend private fun callChageFacialExpr(file:File, opt: Int ?= 0) : String{
-        return ""
+
+
+
+
+    private fun generateUniqueFileName(): String {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        return "image_$timeStamp.jpg"
     }
 
 
-    suspend fun callBackgroundRemove(): String {
-        lateinit var ret : String //imgBackX
-        val requestFile = ContentUriRequestBody(applicationContext, imgUri).toFormData()
-
-        val option ="whiteBK"
-        val requestOption = option.toRequestBody("multipart/form-data".toMediaType())
 
 
-        val call = RetrofitApi.getAilabtoolsService.getBackRmvdImg(requestFile, requestOption)
+
+
+    private fun getFilePathFromContentUri(context: Context, contentUri: Uri?): String? {
+        if (contentUri == null) return null
+        val projection = arrayOf(MediaStore.MediaColumns.DATA)
+        val cursor = context.contentResolver.query(contentUri, projection, null, null, null)
+        val filePath: String? = if (cursor != null && cursor.moveToFirst()) {
+            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
+            cursor.getString(columnIndex)
+        } else {
+            null
+        }
+        cursor?.close()
+        return filePath
+    }
+
+
+
+
+
+    private suspend fun callChageFacialExpr(file:File, opt: Int ?= 0) : String =
+        withContext(Dispatchers.IO){
+        var ret : String ?= null //imgFaceChanged
+        val requestFile = ContentUriRequestBody(applicationContext, Uri.fromFile(file)).toFormData()
+        //val fileBody = file.asRequestBody("multipart/form-data".toMediaType());
+        //val requestFile = MultipartBody.Part.createFormData(file.name, file.absolutePath, fileBody)
+
+        val call = RetrofitApi.getAilabtoolsService.getChangedImg(requestFile, opt)
         call.enqueue(object: Callback<AilabApiResponse> {
             override fun onResponse(call: retrofit2.Call<AilabApiResponse>, response: Response<AilabApiResponse>){
-                Log.d("TAG", "api 호출 성공 (네트워크 통신까진 됐음)")
+                Log.d("TAG", "callChageFacialExpr 호출 성공 (네트워크 통신까진 됐음)\n"+response.body().toString())
                 if(response.isSuccessful)
                 {
-                    Log.d("TAG", "이미지 POST api 성공 (Ailabtools)" + response.body()!!.data!!.image_url.toString())
+                    Log.d("TAG", "callChageFacialExpr 성공 (완전 성공)" + response.body()!!.data!!.image_url.toString())
                     ret = response.body()!!.data!!.image_url.toString() //img_url
                 }else{
-                    Log.d("TAG", "이미지 POST api 실패 (Ailabtools, 코드 로직 오류)" + response.body()!!.toString())
+                    Log.d("TAG", "callChageFacialExpr 실패 (Ailabtools, 코드 로직 오류)" + response.body()!!.toString())
                 }
             }
 
@@ -334,10 +413,69 @@ class QuizActivity : AppCompatActivity() {
                 Log.d("TAG", "api 호출 실패 (네트워크 통신 실패)")
             }
         })
-        if(ret==null) throw IllegalArgumentException("")
-        else return ret as String
+
+        if(ret==null) throw IllegalArgumentException("E:IllegalArgumentException")
+        else ret as String  /*base64-decoded String*/
     }
 
+
+
+
+
+    suspend fun callBackgroundRemove(): String  =
+        withContext(Dispatchers.IO){
+        val requestFile = ContentUriRequestBody(applicationContext, imgUri!!).toFormData() //imgUri 형식 확인해보자 :
+        val option = "whiteBK"
+        val requestOption = option.toRequestBody("multipart/form-data".toMediaType())
+
+        val call = RetrofitApi.getAilabtoolsService.getBackRmvdImg(requestFile, requestOption)
+        call.enqueue(object : Callback<AilabApiResponse> {
+            override fun onResponse(call: Call<AilabApiResponse>, response: Response<AilabApiResponse>) {
+                if (response.isSuccessful) {
+                    val imageUrl = response.body()?.data?.image_url?.toString()
+                    Log.d("TAG", "callBackgroundRemove 성공 (완전 성공)" + response.body()!!.data!!.image_url.toString())
+                    imageUrl
+                } else {
+                    Log.d("TAG", "callBackgroundRemove 실패 (Ailabtools, 코드 로직 오류)" + response.body()!!.toString())
+                    null
+                }
+            }
+
+            override fun onFailure(call: Call<AilabApiResponse>, t: Throwable) {
+                Log.e("TAG", t.message.toString()) // API 요청 실패 시의 처리
+                Log.d("TAG", "api 호출 실패 (네트워크 통신 실패)")
+                null
+            }
+        }).toString()
+    }
+
+    //TODO: 에러 고쳐야돼... 왜 되던게 안될까?
+//    fun callBackgroundRemove(): String {
+//        val requestFile = ContentUriRequestBody(applicationContext, imgUri).toFormData()
+//
+//        val option ="whiteBK"
+//        val requestOption = option.toRequestBody("multipart/form-data".toMediaType())
+//
+//
+//        val call = RetrofitApi.getAilabtoolsService.getBackRmvdImg(requestFile, requestOption)
+//        call.enqueue(object: Callback<AilabApiResponse> {
+//            override fun onResponse(call: retrofit2.Call<AilabApiResponse>, response: Response<AilabApiResponse>){
+//                Log.d("TAG", "callBackgroundRemove (네트워크 통신까진 됐음)")
+//                if(response.isSuccessful)
+//                {
+//                    Log.d("TAG", "callBackgroundRemove 완전 성공 (Ailabtools)" + response.body()!!.data!!.image_url.toString())
+//                }else{
+//                    Log.d("TAG", "callBackgroundRemove 실패 (Ailabtools, 코드 로직 오류)" + response.body()!!.toString())
+//                }
+//            }
+//
+//            override fun onFailure(call: retrofit2.Call<AilabApiResponse>, t: Throwable)
+//            {
+//                Log.e("TAG", t.message.toString()) // API 요청 실패 시의 처리
+//                Log.d("TAG", "api 호출 실패 (네트워크 통신 실패)")
+//            }
+//        })
+//    }
 
 
     //완성!
