@@ -5,6 +5,7 @@ import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -12,6 +13,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import com.bumptech.glide.Glide
 import com.example.myapplication.BuildConfig
 import com.example.myapplication.R
@@ -31,14 +33,17 @@ class CaptureResult : AppCompatActivity() {
 
     private lateinit var viewBinding: ActivityCaptureResultBinding
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var galleryLauncher: ActivityResultLauncher<String>
+
 
     private lateinit var imgPath : String
     private var imgUri : Uri ?= null
     private lateinit var filename : String
 
+    //
+    private var isGalleryVisited : Boolean = false
+    val GET_PICTURE_FROM_GALLERY : Int = 30
 
-
-    private val ailabtools_api_key : String = BuildConfig.api_key_ailabtools_yeo
 
 
 
@@ -52,19 +57,35 @@ class CaptureResult : AppCompatActivity() {
         /** INFO: 다른 액티비티에서 이 액티비티로 넘어왔을때,
          *  INFO resultCode로 어느 액티비티에서 온 것인지구분할 수 있음.
          * */
-        /*
-        val activityResultLauncher: ActivityResultLauncher<Intent> =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+        /**/
+        
+        //한 기능당 하나씩인 듯
+        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
             { result: ActivityResult ->
                 run {
-                    if (result.resultCode == INTENT_CODE_FROM_BASE_TO_CAPTURE) { //Base->Capture로 인텐트가 돌아온 경우
-                        //INFO: imgPath와 imgUri는 각각 String, Uri 데이터타입인 것 외에는 내부적인 String 값은 같다.
-                        Log.d("[캡쳐리절트]","여기들어왔어요") //안들어옴
-
+                    when (result.resultCode) { //Base->Capture로 인텐트가 돌아온 경우
+                        (GET_PICTURE_FROM_GALLERY)->{
+                            //INFO: imgPath와 imgUri는 각각 String, Uri 데이터타입인 것 외에는 내부적인 String 값은 같다.
+                            Log.d(TAG,"여기들어왔어요") //안들어옴
+                        }
                     }
                 }
             }
-        */
+
+        galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()){
+            uri:Uri ? ->
+            run {
+                if (uri != null) {
+                    imgUri = uri
+                    Log.d(TAG, imgUri.toString())
+                    SharedPreferencesUtil.putString(getString(R.string.orig_pic), uri.toString())
+                    viewBinding.captureResultImage.setImageURI(uri)
+                }
+            }
+        }
+
+
+
 
 
 
@@ -96,7 +117,13 @@ class CaptureResult : AppCompatActivity() {
 
         // TODO: Navigate to the gallery
         viewBinding.captureResultBtnGallery.setOnClickListener {
-            
+            isGalleryVisited=true
+
+            //TODO move to Gallery
+//            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+//            intent.type = "image/*"
+//            intent.addFlags(GET_PICTURE_FROM_GALLERY)
+            galleryLauncher.launch("image/*")
         }
 
 
