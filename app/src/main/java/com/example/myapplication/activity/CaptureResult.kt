@@ -18,6 +18,7 @@ import com.bumptech.glide.Glide
 import com.example.myapplication.BuildConfig
 import com.example.myapplication.R
 import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_BASE_TO_CAPTURE
+import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_COMPARE
 import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_QUIZ
 import com.example.myapplication.activity.BaseActivity.Companion.TAG
 import com.example.myapplication.databinding.ActivityCaptureResultBinding
@@ -88,9 +89,15 @@ class CaptureResult : AppCompatActivity() {
 
 
 
-
-        //imgPath: content://media/external/images/media/1000000174
-        imgPath = intent.getStringExtra(getString(R.string.orig_pic)).toString() // 로컬 jpg 파일 URI : String
+        imgPath = when{
+            (!BaseActivity.newPicSession)->{
+                //imgPath: content://media/external/images/media/1000000174
+                intent.getStringExtra(getString(R.string.orig_pic)).toString() // 로컬 jpg 파일 URI : String
+            }
+            else -> {
+                intent.getStringExtra(getString(R.string.new_pic)).toString()
+            }
+        }
 
         // URI 데이터타입 : Uri
         imgUri = Uri.parse(imgPath)
@@ -101,6 +108,7 @@ class CaptureResult : AppCompatActivity() {
         Glide.with(this)
             .load(imgPath)
             .into(viewBinding.captureResultImage)
+
 
 
 
@@ -135,18 +143,23 @@ class CaptureResult : AppCompatActivity() {
 
 
 
+        //1)Firebase에 저장하고(o)   2)웹 접근 가능한 URL 얻어 놓기->sharedPreference (o)
         viewBinding.captureResultBtnProceed.setOnClickListener {
-            //1)Firebase에 저장하고(o)   2)웹 접근 가능한 URL 얻어 놓기->sharedPreference (o)
-            uploadImage(imgUri!!, filename)
+            if(!BaseActivity.newPicSession){
+                uploadImage(imgUri!!, filename)
+                SharedPreferencesUtil.putString(getString(R.string.orig_pic), imgUri.toString())
+                val intent = Intent(this@CaptureResult, QuizActivity::class.java)
+                intent.putExtra("imgUri",imgUri)
+                setResult(INTENT_CODE_FROM_CAPTURE_TO_QUIZ, intent) //Todo
+                startActivity(intent)
+            }else{
 
-            //imgUri 공유
-            SharedPreferencesUtil.putString(getString(R.string.orig_pic), imgUri.toString())
-            
-
-            val intent = Intent(this@CaptureResult, QuizActivity::class.java)
-            intent.putExtra("imgUri",imgUri)
-            setResult(INTENT_CODE_FROM_CAPTURE_TO_QUIZ, intent)
-            startActivity(intent)
+                SharedPreferencesUtil.putString(getString(R.string.new_pic), imgUri.toString())
+                val intent = Intent(this@CaptureResult, CompareActivity::class.java)
+                intent.putExtra("imgUri",imgUri)
+                setResult(INTENT_CODE_FROM_CAPTURE_TO_COMPARE, intent)
+                startActivity(intent)
+            }
         }
 
 
@@ -158,6 +171,7 @@ class CaptureResult : AppCompatActivity() {
 
 
 
+    // newPicSession 고려 안해도 됌
     // on below line creating a function to upload our image.
     fun uploadImage(fileUri: Uri, fName : String) {
         if (fileUri != null) {
@@ -170,7 +184,7 @@ class CaptureResult : AppCompatActivity() {
 
             val ref: StorageReference = FirebaseStorage.getInstance().getReference()
                 .child(fbFilepath);//fbFilepath 이름으로 파일 업로드
-
+            
             var uploadTask = ref.putFile(fileUri)
             val urlTask = uploadTask.continueWithTask { task ->
                 if (!task.isSuccessful) {

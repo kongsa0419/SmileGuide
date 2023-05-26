@@ -72,12 +72,16 @@ class BaseActivity : AppCompatActivity() {
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var viewBinding: ActivityMainBinding
 
+
+    //전체 액티비티에서 접근 가능
     companion object{
+        var newPicSession :Boolean = false // 표정연습하는 단계 flag
         
         //액티비티 간에 스위치, 정보교환을 위한 콜백 코드
         //어쩌면... 내 경우에는 단계별로 액티비티를 이동시키니까 이게 필요가 없을 수도 있어
         const val INTENT_CODE_FROM_BASE_TO_CAPTURE = 9120
         const val INTENT_CODE_FROM_CAPTURE_TO_QUIZ = 9230
+        const val INTENT_CODE_FROM_CAPTURE_TO_COMPARE = 9240
         const val INTENT_CODE_FROM_QUIZ_TO_BASE = 9310
 
         const val TAG = "CameraXApp"
@@ -113,6 +117,8 @@ class BaseActivity : AppCompatActivity() {
         
         //SharedPreference를 앱 전체에서 사용가능
         SharedPreferencesUtil.init(this);
+        SharedPreferencesUtil.removeString(getString(R.string.new_pic))
+
 
         //ActivityMainBinding : activity_main.xml에 연결해줌
         viewBinding = ActivityMainBinding.inflate(layoutInflater) 
@@ -284,15 +290,28 @@ class BaseActivity : AppCompatActivity() {
                     //content://media/external/images/media/1000004694
                     //val savedUri = output.savedUri ?: Uri.fromFile(File(output.savedUri.toString()))
 
-                    SharedPreferencesUtil.putString(getString(R.string.orig_pic), output.savedUri.toString())
-                    
-                    //INFO : 여기서 orig_pic은 intent에 저장하는 거지, sharedPreference에 저장하는 것이 아님 -> 일단 이것도 해보자
-                    val intent = Intent(this@BaseActivity, CaptureResult::class.java).apply {
-                        putExtra(getString(R.string.orig_pic), output.savedUri.toString())
+                    // 처음 찍는 사진인 경우 vs 바뀐 표정에 빗대어 사진 찍는 경우
+                    when{
+                        (!newPicSession)->{
+                            SharedPreferencesUtil.putString(getString(R.string.orig_pic), output.savedUri.toString())
+                            //INFO : 여기서 orig_pic은 intent에 저장하는 거지, sharedPreference에 저장하는 것이 아님 -> 일단 이것도 해보자
+                            val intent = Intent(this@BaseActivity, CaptureResult::class.java).apply {
+                                putExtra(getString(R.string.orig_pic), output.savedUri.toString())
+                            }
+                            startActivity(intent)
+                        }
+                        else ->{
+                            SharedPreferencesUtil.putString(getString(R.string.new_pic), output.savedUri.toString())
+                            val intent = Intent(this@BaseActivity, CaptureResult::class.java).apply {
+                                putExtra(getString(R.string.new_pic), output.savedUri.toString())
+                            }
+                            startActivity(intent)
+                        }
                     }
-                    startActivity(intent)
                 }
+
             }
+
         )
     }
 
@@ -352,7 +371,6 @@ class BaseActivity : AppCompatActivity() {
 
 
 
-
     //이미지 밝아졌다가 어두워졌다가 하는 효과
     var blinkJob: Job? = null
     var isPlus = true
@@ -383,6 +401,8 @@ class BaseActivity : AppCompatActivity() {
             }
             viewBinding.mainPicTrans.alpha = 0.25f
         }
+
+        newPicSession = true
     }
 
 

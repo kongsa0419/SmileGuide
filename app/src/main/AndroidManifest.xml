@@ -27,9 +27,12 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="33">
         <activity
+            android:name=".activity.CompareActivity"
+            android:exported="false">
+        </activity>
+        <activity
             android:name=".activity.QuizActivity"
             android:exported="false">
-
         </activity>
         <activity
             android:name=".activity.CaptureResult"
@@ -37,12 +40,13 @@
         <activity
             android:name=".activity.BaseActivity"
             android:exported="true">
-            <!--            원래 false였음-->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!--            원래 false였음-->
+
         </activity>
 
 <!--        <activity-->

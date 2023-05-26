@@ -24,7 +24,7 @@
 
     <string name="orig_pic">orig_pic</string> <!-- 원본 사진 URI-->
     <string name="trns_pic">trns_pic</string> <!-- Base64-decoded String -->
-
+    <string name="new_pic">new_pic</string>   <!-- 표정 연습한 사진 -->
 
 
 
