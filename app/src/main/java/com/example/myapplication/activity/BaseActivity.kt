@@ -1,33 +1,35 @@
-package com.example.myapplication
+package com.example.myapplication.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import android.util.Rational
+import android.util.Base64
 import android.util.Size
+import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
-import androidx.camera.core.impl.utils.AspectRatioUtil
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
+import com.example.myapplication.R
 import com.example.myapplication.databinding.ActivityMainBinding
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
+import com.example.myapplication.util.SharedPreferencesUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
@@ -73,7 +75,7 @@ class BaseActivity : AppCompatActivity() {
         const val INTENT_CODE_FROM_CAPTURE_TO_QUIZ = 9230
         const val INTENT_CODE_FROM_QUIZ_TO_BASE = 9310
 
-        private const val TAG = "CameraXApp"
+        const val TAG = "CameraXApp"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
@@ -86,7 +88,6 @@ class BaseActivity : AppCompatActivity() {
                 }
             }.toTypedArray()
     }
-
 
 
     //private var imageCapture: ImageCapture? = null
@@ -117,22 +118,24 @@ class BaseActivity : AppCompatActivity() {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
+            )
         }
 
 
-        /* // 필요없을 가능성이 있어서 일단 주석처리
+        /* // 필요없을 가능성이 있어서 일단 주석처리 */
         activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
-            result:ActivityResult->run {
+            result: ActivityResult -> run {
             //INTENT_CODE_FROM_QUIZ_TO_BASE 가 적절히 비교되는지 확인
             if (result.resultCode == INTENT_CODE_FROM_QUIZ_TO_BASE) {
                     //1 로딩 다이어로그와 함께 각종 API 호출
                     //2 이미지 띄우기 (배경 블러 효과)
+                    Log.d(TAG, "onNewIntent가 아니라, Quiz->Base 여기로 빠지네")
                 }
             }
         }
-        */
+
 
 
 
@@ -223,6 +226,13 @@ class BaseActivity : AppCompatActivity() {
     }
 
 
+    fun onMyImageButtonClicked(view: View) {
+        // Perform your desired action here
+        // Apply the animation
+        val buttonAnimation = AnimationUtils.loadAnimation(this, R.anim.button_click_animation)
+        view.startAnimation(buttonAnimation)
+    }
+
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
@@ -238,7 +248,6 @@ class BaseActivity : AppCompatActivity() {
                 //put(MediaStore.Images.Media.RELATIVE_PATH, "{}")
             }
         }
-
         val metadata = ImageCapture.Metadata()
         metadata.setReversedHorizontal(true); // This method will fix mirror issue
         // Create output options object which contains file + metadata
@@ -274,7 +283,9 @@ class BaseActivity : AppCompatActivity() {
                     //content://media/external/images/media/1000004694
                     //val savedUri = output.savedUri ?: Uri.fromFile(File(output.savedUri.toString()))
 
-                    //INFO : 여기서 orig_pic은 intent에 저장하는 거지, sharedPreference에 저장하는 것이 아님
+                    SharedPreferencesUtil.putString(getString(R.string.orig_pic), output.savedUri.toString())
+                    
+                    //INFO : 여기서 orig_pic은 intent에 저장하는 거지, sharedPreference에 저장하는 것이 아님 -> 일단 이것도 해보자
                     val intent = Intent(this@BaseActivity, CaptureResult::class.java).apply {
                         putExtra(getString(R.string.orig_pic), output.savedUri.toString())
                     }
@@ -349,15 +360,23 @@ class BaseActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         if (intent != null) {
-            var imgPath =
-                SharedPreferencesUtil.getString(getString(R.string.orig_pic_web_filename)) //firebase url
-            Glide.with(this)
-                .load(imgPath)
-                .into(viewBinding.mainPicTrans)
 
-            viewBinding.mainPicTrans.alpha = 1.0f
+            var base64String : String = intent.getStringExtra(getString(R.string.trns_pic).toString())?.let{
+                SharedPreferencesUtil.getString(getString(R.string.trns_pic))
+            }.toString() //base64-encoded String
 
-            Toast.makeText(this, imgPath, Toast.LENGTH_SHORT).show()
+            val imageBytes = Base64.decode(base64String, Base64.DEFAULT)
+            val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            viewBinding.mainPicTrans.setImageBitmap(decodedImage)
+
+//            var imgPath : String ?= null
+//                Glide.with(this)
+//                .load(imgPath)
+//                .into(viewBinding.mainPicTrans)
+
+            viewBinding.mainPicTrans.alpha = 0.25f
+
+            Toast.makeText(this, "OnNewIntent()", Toast.LENGTH_SHORT).show()
             val data = intent.getStringExtra(getString(R.string.trns_pic))
 
             if (data != null) {
@@ -375,19 +394,6 @@ class BaseActivity : AppCompatActivity() {
     // finish()로 왔을 경우에 그대로 카메라만 쓰면 되는거 아닌가? 다이어로그도 당연히 안뜰거고
     override fun onResume() {
         super.onResume()
-        viewBinding.mainPicTrans.alpha = 1.0f
-        /*
-        val origPicture = SharedPreferencesUtil.getString(getString(R.string.orig_pic))
-
-        if(origPicture != null){
-            //TODO : 아무것도 할게 없지않나?
-            //1 API call(이미지 변환, 백그라운드 제거)
-            //2 SharedPreference에 저장해둔 바뀐 이미지를 카메라 위에 띄우기
-        }else{
-            //TODO 확인 후 삭제 요청
-            Log.d(getString(R.string.log_key_universal), "표정변환 하기로 한 파일의 URL이 SharedPreference에 저장되어있지 않음. 다른 액티비티에서 저장이 안 됐거나 로직이 이상할 수 있음.")
-        }
-        */
     }
 
 

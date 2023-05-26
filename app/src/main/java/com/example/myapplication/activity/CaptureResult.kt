@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.activity
 
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
@@ -8,9 +8,16 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.example.myapplication.BuildConfig
+import com.example.myapplication.R
+import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_BASE_TO_CAPTURE
+import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_QUIZ
+import com.example.myapplication.activity.BaseActivity.Companion.TAG
 import com.example.myapplication.databinding.ActivityCaptureResultBinding
 import com.example.myapplication.util.SharedPreferencesUtil
 import com.google.firebase.storage.FirebaseStorage
@@ -26,14 +33,12 @@ class CaptureResult : AppCompatActivity() {
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var imgPath : String
-    private lateinit var imgUri : Uri
+    private var imgUri : Uri ?= null
     private lateinit var filename : String
 
-    private lateinit var imgBackX : String // url
 
-    private lateinit var imgFaceChanged : String //base64 encoded
 
-    private val ailabtools_api_key : String = BuildConfig.api_key_ailabtools
+    private val ailabtools_api_key : String = BuildConfig.api_key_ailabtools_yeo
 
 
 
@@ -54,21 +59,28 @@ class CaptureResult : AppCompatActivity() {
                 run {
                     if (result.resultCode == INTENT_CODE_FROM_BASE_TO_CAPTURE) { //Base->Capture로 인텐트가 돌아온 경우
                         //INFO: imgPath와 imgUri는 각각 String, Uri 데이터타입인 것 외에는 내부적인 String 값은 같다.
-                        Log.d("[캡쳐리절트]","여기들어왔어요!!") //안들어옴
+                        Log.d("[캡쳐리절트]","여기들어왔어요") //안들어옴
+
                     }
                 }
             }
         */
 
+
+
         //imgPath: content://media/external/images/media/1000000174
         imgPath = intent.getStringExtra(getString(R.string.orig_pic)).toString() // 로컬 jpg 파일 URI : String
-        imgUri = Uri.parse(imgPath) // URI 데이터타입 : Uri
-        filename  = imgUri.lastPathSegment.toString()
+
+        // URI 데이터타입 : Uri
+        imgUri = Uri.parse(imgPath)
+        filename  = imgUri!!.lastPathSegment.toString() //TODO : 여기서 !!는 어떻게 없애?
+
 
 
         Glide.with(this)
             .load(imgPath)
             .into(viewBinding.captureResultImage)
+
 
 
 
@@ -100,25 +112,20 @@ class CaptureResult : AppCompatActivity() {
 
         viewBinding.captureResultBtnProceed.setOnClickListener {
             //1)Firebase에 저장하고(o)   2)웹 접근 가능한 URL 얻어 놓기->sharedPreference (o)
-            uploadImage(imgUri, filename)
+            uploadImage(imgUri!!, filename)
+
+            //imgUri 공유
+            SharedPreferencesUtil.putString(getString(R.string.orig_pic), imgUri.toString())
+            
 
             val intent = Intent(this@CaptureResult, QuizActivity::class.java)
             intent.putExtra("imgUri",imgUri)
+            setResult(INTENT_CODE_FROM_CAPTURE_TO_QUIZ, intent)
             startActivity(intent)
         }
 
 
-
-
-
-
-
-
-
         viewBinding.captureResultBtnBack.setOnClickListener {
-            // TODO: sharedPreference에 저장된 사진을 삭제 (intent로 넘어온 값은 자동소멸)
-            SharedPreferencesUtil.removeString(getString(R.string.orig_pic_web_filename))
-            SharedPreferencesUtil.removeString(getString(R.string.orig_pic_web_downloadable_url))
             finish() // 사진 재촬영 (Go back to the previous activity)
         }
 
@@ -139,7 +146,7 @@ class CaptureResult : AppCompatActivity() {
             val ref: StorageReference = FirebaseStorage.getInstance().getReference()
                 .child(fbFilepath);//fbFilepath 이름으로 파일 업로드
 
-            var uploadTask = ref.putFile(fileUri!!)
+            var uploadTask = ref.putFile(fileUri)
             val urlTask = uploadTask.continueWithTask { task ->
                 if (!task.isSuccessful) {
                     task.exception?.let {
@@ -151,11 +158,7 @@ class CaptureResult : AppCompatActivity() {
                 if (task.isSuccessful) { //Handle success
                     //INFO : 다운로드 가능한 URI = downloadUri.toString()
                     val downloadUri = task.result
-                    Log.d("[FB]downloadUri.toString()", downloadUri.toString())
-
-                    //이 이미지 url을 기억해둬야함. (sharedPreference)
-                    SharedPreferencesUtil.putString(getString(R.string.orig_pic_web_filename), fbFilepath)
-                    SharedPreferencesUtil.putString(getString(R.string.orig_pic_web_downloadable_url), downloadUri.toString())
+                    Log.d(TAG, "[FB]downloadUri.toString()" + downloadUri.toString())
                     Toast.makeText(applicationContext, "[FB]이미지 업로드 성공", Toast.LENGTH_SHORT).show()
                 } else { //Handle failures
                     Toast.makeText(applicationContext, "[FB]이미지 업로드 실패", Toast.LENGTH_SHORT).show()
@@ -168,7 +171,7 @@ class CaptureResult : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.d("CAPRES","onResume 들어왔음")
+        Log.d(TAG,"onResume 들어왔음")
     }
 
 
@@ -176,8 +179,6 @@ class CaptureResult : AppCompatActivity() {
         super.onDestroy()
         //만약에 SharedPreferences에 저장된 값들이 있다면 삭제해줘야함
         //스택에 쌓였으면 아직 여기까지는 안 왔을거니까
-        SharedPreferencesUtil.removeString(getString(R.string.orig_pic_web_filename))
-        SharedPreferencesUtil.removeString(getString(R.string.orig_pic_web_downloadable_url))
     }
 
 

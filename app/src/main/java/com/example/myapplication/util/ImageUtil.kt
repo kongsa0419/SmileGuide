@@ -1,84 +1,94 @@
 package com.example.myapplication.util
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
-import java.io.ByteArrayOutputStream
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.util.Log
+import androidx.core.net.toFile
+import com.example.myapplication.R
+import com.example.myapplication.activity.BaseActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.net.URL
 
-object ImageUtil {
-
-    fun downloadImage(context : Context , url: String): File {
-        val fileUri = Uri.parse(url)
-        val fileName = fileUri.lastPathSegment ?: "image.jpg"
-        val file = File(context.cacheDir, fileName)
-        val outputStream = FileOutputStream(file)
-
-        val connection = URL(url).openConnection()
-        connection.connect()
-        val contentLength = connection.contentLength
-
-        val inputStream = connection.getInputStream()
-        val buffer = ByteArray(contentLength)
-        var bytesRead: Int
-        var totalBytesRead = 0
-        while (inputStream.read(buffer, totalBytesRead, contentLength - totalBytesRead).also { bytesRead = it } != -1) {
-            totalBytesRead += bytesRead
-        }
-
-        outputStream.write(buffer, 0, totalBytesRead)
-
-        outputStream.flush()
-        outputStream.close()
-        inputStream.close()
-
-        return file
-    }
-
-    fun getFileNameFromUrl(url: String): String {
-        val lastIndex = url.lastIndexOf('/')
-        return if (lastIndex != -1 && lastIndex < url.length - 1) {
-            url.substring(lastIndex + 1)
-        } else {
-            throw IllegalArgumentException("Invalid URL: $url")
-        }
-    }
-
-
-
-    fun bitmapToJpgUri(context: Context, bitmap: Bitmap): Uri {
-        val bytes = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-        val path = File(context.cacheDir, "temp.jpg")
-        val fileOutputStream = FileOutputStream(path)
-        fileOutputStream.write(bytes.toByteArray())
-        fileOutputStream.close()
-        return Uri.fromFile(path)
-    }
-
-    fun jpgUriToBitmap(context: Context, uri: Uri): Bitmap {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        return BitmapFactory.decodeStream(inputStream)
-    }
+//연습장임
 
 
 
 
 
-    // 이미지 파일을 Bitmap으로 변환하는 함수
-    fun fileToBitmap(file: File): Bitmap? {
-        return BitmapFactory.decodeFile(file.absolutePath)
-    }
-
-    // Bitmap을 ByteArray로 변환하는 함수
-    fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-        return byteArrayOutputStream.toByteArray()
-    }
 
 
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+//import android.content.ContentValues
+//import android.content.Context
+//import android.graphics.Bitmap
+//import android.graphics.BitmapFactory
+//import android.media.MediaMetadataRetriever
+//import android.media.MediaScannerConnection
+//import android.net.Uri
+//import android.os.Build
+//import android.os.Environment
+//import android.os.storage.StorageManager
+//import android.provider.MediaStore
+//import androidx.annotation.RequiresApi
+//import androidx.core.content.ContextCompat
+//import androidx.core.content.ContextCompat.getSystemService
+//import kotlinx.coroutines.Dispatchers
+//import kotlinx.coroutines.withContext
+//import java.io.ByteArrayOutputStream
+//import java.io.File
+//import java.io.FileOutputStream
+//import java.io.InputStream
+//import java.net.HttpURLConnection
+//import java.net.URL
+//import java.net.URLConnection
+//
+//enum class MediaStoreFileType(
+//    val externalContentUri: Uri,
+//    val mimeType: String,
+//    val pathByDCIM: String
+//) {
+//    IMAGE(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*", "/image"),
+//    AUDIO(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "audio/*", "/audio"),
+//    VIDEO(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*", "/video");
+//}
+//object ImageUtil {
+//
+//
+//    suspend fun convertURLToFile(url: String): File {
+//        val response = withContext(Dispatchers.IO) {
+//            URL(url).openConnection().getInputStream().use { input ->
+//                ByteArrayOutputStream().use { output ->
+//                    input.copyTo(output)
+//                    output.toByteArray()
+//                }
+//            }
+//        }
+//        val ext = url.substringAfterLast(".") // URL 구조에 맞게 수정할 것
+//        val filename = url.substringAfterLast("/") // URL 구조에 맞게 수정할 것
+//        val metadata = MediaMetadataRetriever.METADATA_KEY_MIMETYPE to "image/$ext"
+//
+//        return File.createTempFile(filename, ".$ext").apply {
+//            writeBytes(response)
+//        }
+//    }
+//
+//
+//}

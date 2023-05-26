@@ -1,7 +1,9 @@
-package com.example.myapplication;
+package com.example.myapplication.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import com.example.myapplication.R;
 
 /**
 * 앱 전체에서 접근 가능한 sharedPreference (캐시 저장소 쯤으로 생각하자)

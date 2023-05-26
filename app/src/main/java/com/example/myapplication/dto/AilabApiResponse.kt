@@ -19,8 +19,10 @@ data class AilabApiResponse(
 )
 
 data class Data(
-    @Json(name="image_url")
+    @Json(name="image_url") // background-removal
     val image_url: String?,
+    @Json(name="image") // facial-expr-change
+    val image: String?,
     @Json(name = "elements")
     val elements: List<Element?>?
 )

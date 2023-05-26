@@ -17,7 +17,7 @@ android {
     defaultConfig {
         applicationId "com.example.myapplication"
         minSdk 24
-        targetSdk 31 //33에서 바꿈
+        targetSdk 33 //31<->33에서 바꿈
         versionCode 1
         versionName "1.0"
 
@@ -25,9 +25,13 @@ android {
 
         //firebase bucket
         buildConfigField "String", "firebase_bucket", properties["firebase.bucket"]
-        // api key 변수 지정
-        buildConfigField "String", "api_key_ailabtools", properties["api.key.ailabtools"]
-        buildConfigField "String", "APIKEY2", properties["api.key.test2"]
+
+        // ailabtools : api keys
+        buildConfigField "String", "api_key_ailabtools_yeo", properties["api.key.ailabtools.yeo"]
+        buildConfigField "String", "api_key_ailabtools_cha", properties["api.key.ailabtools.cha"]
+        buildConfigField "String", "api_key_ailabtools_seo", properties["api.key.ailabtools.seo"]
+
+        buildConfigField "String", "api_key_luxand", properties["api.key.luxand"]
 
     }
 
