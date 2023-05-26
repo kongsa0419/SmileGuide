@@ -1,5 +1,6 @@
 package com.example.myapplication.activity
 
+import com.example.myapplication.R
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -9,11 +10,12 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.util.Base64
+import android.util.Log
 import android.util.Size
 import android.view.View
 import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -24,17 +26,20 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide
-import com.example.myapplication.R
+import androidx.lifecycle.lifecycleScope
+
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.myapplication.databinding.ActivityMainBinding
 import com.example.myapplication.util.SharedPreferencesUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
+import java.lang.Runnable
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
+
 
 
 //NOTI @ref : [https://github.com/android-academy-minsk/CameraX/blob/master/app/src/main/java/com/psliusar/nicolas/camera/LuminosityAnalyzer.kt]
@@ -127,26 +132,22 @@ class BaseActivity : AppCompatActivity() {
         activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             result: ActivityResult -> run {
-            //INTENT_CODE_FROM_QUIZ_TO_BASE 가 적절히 비교되는지 확인
-            if (result.resultCode == INTENT_CODE_FROM_QUIZ_TO_BASE) {
-                    //1 로딩 다이어로그와 함께 각종 API 호출
-                    //2 이미지 띄우기 (배경 블러 효과)
-                    Log.d(TAG, "onNewIntent가 아니라, Quiz->Base 여기로 빠지네")
+                when(result.resultCode){
+                    (INTENT_CODE_FROM_BASE_TO_CAPTURE)->{
+
+                    }
+
+                    (INTENT_CODE_FROM_QUIZ_TO_BASE)->{
+                        //TODO 여기로 잘 들어오는지 확인
+                        // QUiz-> Base
+                        Log.d(TAG, "onNewIntent가 아니라, Quiz->Base 여기로 빠지네")
+                    }
+                    (RESULT_OK)->{
+                        Log.d(TAG, "결국 여기로 빠지네?")
+                    }
                 }
             }
         }
-
-
-
-
-        //TODO : sharedPreference에서 quiz->base로 넘어온 경우를 다뤄줌
-        // 새로운 액티비티가 만들어져 스택에 쌓일거기 때문에 onCreate() 호출됌
-        //1 로딩 다이어로그와 함께 각종 API 호출
-        //2 이미지 띄우기 (배경 블러 효과)
-
-
-
-
 
         viewBinding.mainPicTrans.alpha = 0.0f
 
@@ -295,7 +296,6 @@ class BaseActivity : AppCompatActivity() {
         )
     }
 
-
     private fun captureVideo() {}
 
 
@@ -353,14 +353,17 @@ class BaseActivity : AppCompatActivity() {
 
 
 
-
+    //이미지 밝아졌다가 어두워졌다가 하는 효과
+    var blinkJob: Job? = null
+    var isPlus = true
     // 기존 액티비티 스택에 있던 BaseActivity를 스택 맨 위로 올리고 onResume()호출
     // onNewIntent() → onResume()
     // TODO: QuizActivity에서 넘어온 사진을 흐릿하게 바꾸어 띄워주기
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        val vs = 0.05
+        val ve = 0.45
         if (intent != null) {
-
             var base64String : String = intent.getStringExtra(getString(R.string.trns_pic).toString())?.let{
                 SharedPreferencesUtil.getString(getString(R.string.trns_pic))
             }.toString() //base64-encoded String
@@ -369,18 +372,16 @@ class BaseActivity : AppCompatActivity() {
             val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
             viewBinding.mainPicTrans.setImageBitmap(decodedImage)
 
-//            var imgPath : String ?= null
-//                Glide.with(this)
-//                .load(imgPath)
-//                .into(viewBinding.mainPicTrans)
-
-            viewBinding.mainPicTrans.alpha = 0.25f
-
-            Toast.makeText(this, "OnNewIntent()", Toast.LENGTH_SHORT).show()
-            val data = intent.getStringExtra(getString(R.string.trns_pic))
-
-            if (data != null) {
+            blinkJob?.cancel()
+            blinkJob = lifecycleScope.launch(Dispatchers.Main) {
+                while(true) {
+                    viewBinding.mainPicTrans.alpha += if(isPlus) 0.015f else -0.015f
+                    delay(50)
+                    if(viewBinding.mainPicTrans.alpha >= ve ||
+                        viewBinding.mainPicTrans.alpha <= vs) isPlus = !isPlus
+                }
             }
+            viewBinding.mainPicTrans.alpha = 0.25f
         }
     }
 

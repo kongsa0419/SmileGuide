@@ -95,10 +95,8 @@ class CaptureResult : AppCompatActivity() {
          * */
 
         // TODO: Navigate to the gallery
-        viewBinding.captureResultBtnGallery.visibility = View.VISIBLE //INFO (testing)
-
         viewBinding.captureResultBtnGallery.setOnClickListener {
-
+            
         }
 
 

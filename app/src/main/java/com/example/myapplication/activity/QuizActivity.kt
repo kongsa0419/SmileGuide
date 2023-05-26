@@ -262,13 +262,14 @@ class QuizActivity : AppCompatActivity() {
 
                 CoroutineScope(Dispatchers.IO).launch{
                     try{
-                        val backX : String = callBackgroundRemove() //인물 배경제거 API1, 호출 실패시 샘플
+//                        val backX : String = callBackgroundRemove()?.let{ api1SampleResult}.toString() //인물 배경제거 API1, 호출 실패시 샘플
+                        val backX = api1SampleResult
 
                         val file : File = convertToFile(applicationContext, backX)
 
-                        val chnged  = callChageFacialExpr(file!!, 0/**/)
+//                        val chnged  = callChageFacialExpr(file, 0/**/)?.let{ api2SampleResult}.toString()
+                        val chnged = api2SampleResult
 
-                        imgFaceChanged = chnged //굳이 필요없긴 함
 
                         withContext(Dispatchers.Main){
                             SharedPreferencesUtil.putString(getString(R.string.trns_pic), chnged)

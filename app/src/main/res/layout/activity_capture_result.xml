@@ -27,11 +27,11 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <!--    open to default gallery app-->
-        <Button
+        <ImageButton
             android:id="@+id/capture_result_btn_gallery"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:padding="40dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_margin="0dp"
             android:background="@drawable/outline_photo_24"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
