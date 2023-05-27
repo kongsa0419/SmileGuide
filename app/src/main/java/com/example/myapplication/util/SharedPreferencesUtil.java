@@ -33,4 +33,10 @@ public class SharedPreferencesUtil {
         editor.apply();
     }
 
+    public static void removePicRelatedStrings(){
+        removeString(String.valueOf(R.string.new_pic));
+        removeString(String.valueOf(R.string.orig_pic));
+        removeString(String.valueOf(R.string.trns_pic));
+    }
+
 }

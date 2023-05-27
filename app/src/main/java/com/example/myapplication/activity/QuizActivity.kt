@@ -52,12 +52,52 @@ class QuizActivity : AppCompatActivity() {
         const val CIRCLE_EFFECT = 0
         const val CROSS_EFFECT = 1
 
+
+
+
         /** change face options */
         const val BIG_LAUGH = 0 //default
         const val POUTING = 1
         const val FEEL_SAD = 2
         const val SMILE = 3
         const val OPENING_EYES = 4
+
+
+        /**문제 출제용 (Luxid아님)
+         *  웃음 :    List NICE = {PROUD 뿌듯함, THANKFUL 고마움, NICE기분좋음}
+         *  활짝웃음 : List SMILE = {BIG_LAUGH 활짝웃음, HAPPINESS 행복함, DELIGHT 반가움}
+         *  삐짐 :    List POUT = {POUTING 삐짐}
+         *  우울함:   List BAD = {DEPRESSED 우울함 , DISTRESSED 속상함}
+         * */
+        const val PROUD = 11
+        const val THANKFUL = 12
+        const val NICE = 13
+        //BIG_LAUGH = 21 (위에 이미 정의됌)
+        const val HAPPINESS = 22
+        const val DELIGHT =23
+        //POUTING = 31 (위에 이미 정의됌)
+        const val DEPRESSED =9
+        const val DISTRESSED = 10
+
+
+        /**Luxand api result*/
+
+        //------------QOA : Question Option Array--------------//
+        val QOA_NICE = listOf<Int>(PROUD, THANKFUL, NICE)
+        val QOA_SMILE = listOf<Int>(BIG_LAUGH, HAPPINESS, DELIGHT)
+        val QOA_POUT = listOf<Int>(POUTING)
+        val QOA_BAD = listOf<Int>(DEPRESSED, DISTRESSED)
+
+        val map_NICE = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
+        val map_SMILE = mapOf<Int, String> (BIG_LAUGH to "", THANKFUL to "", NICE to "")
+        val map_POUT = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
+        val map_BAD = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
+
+
+        
+
+
+
 
         const val QUIZSET_FILE_PATH = "app/src/main/assets/"
 
@@ -262,23 +302,29 @@ class QuizActivity : AppCompatActivity() {
 
                 CoroutineScope(Dispatchers.IO).launch{
                     try{
-//                        val backX : String = callBackgroundRemove()?.let{ api1SampleResult}.toString() //인물 배경제거 API1, 호출 실패시 샘플
+                        /** 실전
+                        다음 let문을 썼더니 API call을 기다리지 않는 거 같음.
+                        ?.let{ api2SampleResult}.toString()
+                         */
+//                        val backX : String = callBackgroundRemove()   //?.let{ api1SampleResult}.toString() //인물 배경제거 API1, 호출 실패시 샘플
+//                        val file : File = convertToFile(applicationContext, backX) //
+//                        val chnged  = callChageFacialExpr(file, 0/**/)
+
+
+                        //테스트
                         val backX = api1SampleResult
-
                         val file : File = convertToFile(applicationContext, backX)
-
-//                        val chnged  = callChageFacialExpr(file, 0/**/)?.let{ api2SampleResult}.toString()
                         val chnged = api2SampleResult
 
 
                         withContext(Dispatchers.Main){
                             SharedPreferencesUtil.putString(getString(R.string.trns_pic), chnged)
+
                             val intent : Intent = Intent(this@QuizActivity, BaseActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT) // 기존에 존재하던 액티비티라면 해당 액티비티로 돌아옴
                             if(chnged != null) intent.putExtra(getString(R.string.trns_pic), chnged /*이미지처리 완료된 Base64-decoded-image*/)
                             else throw java.lang.NullPointerException("${TAG} API2 BAD response")
                             ProgressDialogUtil.hideProgressDialog()
-                            setResult(INTENT_CODE_FROM_QUIZ_TO_BASE)
                             Log.d(TAG, "API2-성공!!! "+ chnged!!)
                             startActivity(intent)
                         }
@@ -401,7 +447,7 @@ class QuizActivity : AppCompatActivity() {
 
     suspend fun callBackgroundRemove(): String  =
         withContext(Dispatchers.IO){
-        val requestFile = ContentUriRequestBody(applicationContext, imgUri!!).toFormData(/*"image"*/)//
+        val requestFile = ContentUriRequestBody(applicationContext, imgUri!!).toFormData(/**/"image")//
         val option = "whiteBK"
         val requestOption = option.toRequestBody("multipart/form-data".toMediaType())
         RetrofitApi.getAilabtoolsService.getBackRmvdImg(requestFile, requestOption).data?.image_url!! //invokeSuspend error

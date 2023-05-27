@@ -7,6 +7,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.opengl.Visibility
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -85,6 +86,7 @@ class BaseActivity : AppCompatActivity() {
         const val INTENT_CODE_FROM_QUIZ_TO_BASE = 9310
 
         const val TAG = "CameraXApp"
+        const val LOG_TAG = "THIS_IS_LOGGING..."
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
@@ -382,8 +384,8 @@ class BaseActivity : AppCompatActivity() {
         val vs = 0.05
         val ve = 0.45
         if (intent != null) {
-            var base64String : String = intent.getStringExtra(getString(R.string.trns_pic).toString())?.let{
-                SharedPreferencesUtil.getString(getString(R.string.trns_pic))
+            var base64String : String = SharedPreferencesUtil.getString(getString(R.string.trns_pic))?.let{
+                intent.getStringExtra(getString(R.string.trns_pic).toString())
             }.toString() //base64-encoded String
 
             val imageBytes = Base64.decode(base64String, Base64.DEFAULT)
@@ -406,6 +408,35 @@ class BaseActivity : AppCompatActivity() {
     }
 
 
+    override fun onRestart() {
+        super.onRestart()
+        if(newPicSession){ //이미지 밝아졌다가 어두워졌다가 하는 효과
+            var base64String : String = SharedPreferencesUtil.getString(getString(R.string.trns_pic))
+            effectOnTrnsImg(base64String)
+        }
+    }
+
+
+
+    fun effectOnTrnsImg(base64String : String){
+        val vs = 0.05
+        val ve = 0.45
+        val imageBytes = Base64.decode(base64String, Base64.DEFAULT)
+        val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        viewBinding.mainPicTrans.setImageBitmap(decodedImage)
+
+        blinkJob?.cancel()
+        blinkJob = lifecycleScope.launch(Dispatchers.Main) {
+            while(true) {
+                viewBinding.mainPicTrans.alpha += if(isPlus) 0.015f else -0.015f
+                delay(50)
+                if(viewBinding.mainPicTrans.alpha >= ve ||
+                    viewBinding.mainPicTrans.alpha <= vs) isPlus = !isPlus
+            }
+        }
+        viewBinding.mainPicTrans.alpha = 0.25f
+    }
+
 
 
 
@@ -416,6 +447,8 @@ class BaseActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
     }
+
+
 
 
 

@@ -20,6 +20,7 @@ import com.example.myapplication.R
 import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_BASE_TO_CAPTURE
 import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_COMPARE
 import com.example.myapplication.activity.BaseActivity.Companion.INTENT_CODE_FROM_CAPTURE_TO_QUIZ
+import com.example.myapplication.activity.BaseActivity.Companion.LOG_TAG
 import com.example.myapplication.activity.BaseActivity.Companion.TAG
 import com.example.myapplication.databinding.ActivityCaptureResultBinding
 import com.example.myapplication.util.SharedPreferencesUtil
@@ -95,7 +96,13 @@ class CaptureResult : AppCompatActivity() {
                 intent.getStringExtra(getString(R.string.orig_pic)).toString() // 로컬 jpg 파일 URI : String
             }
             else -> {
-                intent.getStringExtra(getString(R.string.new_pic)).toString()
+                var ret = intent.getStringExtra(getString(R.string.new_pic)).toString()
+                Log.d(LOG_TAG, "$ret")
+                if(ret==null)
+                {
+                    ret = SharedPreferencesUtil.getString(R.string.new_pic.toString())
+                }
+                ret
             }
         }
 
@@ -157,8 +164,8 @@ class CaptureResult : AppCompatActivity() {
                 SharedPreferencesUtil.putString(getString(R.string.new_pic), imgUri.toString())
                 val intent = Intent(this@CaptureResult, CompareActivity::class.java)
                 intent.putExtra("imgUri",imgUri)
-                setResult(INTENT_CODE_FROM_CAPTURE_TO_COMPARE, intent)
                 startActivity(intent)
+                finish() //TODO 확인
             }
         }
 
