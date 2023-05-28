@@ -216,7 +216,7 @@ class QuizActivity : AppCompatActivity() {
             button.text = quizItem!!.options[index]
         }
 
-        val ans = quizItem!!.answer
+        val ans = quizItem!!.answer //정답 : String
 
         val onClickListener = View.OnClickListener {
             if ((it as TextView).text == ans) {
