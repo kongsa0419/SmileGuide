@@ -31,8 +31,12 @@
             android:value="face" />
         <activity
             android:name=".activity.CompareActivity"
-            android:exported="false">
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".activity.QuizActivity"
@@ -43,12 +47,8 @@
             android:exported="false" />
         <activity
             android:name=".activity.BaseActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:exported="false">
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
             <!--            원래 false였음-->
 
         </activity>
