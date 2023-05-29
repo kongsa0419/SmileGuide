@@ -2,17 +2,24 @@ package com.example.myapplication.activity
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.PointF
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.R
 import com.example.myapplication.activity.BaseActivity.Companion.LOG_TAG
 import com.example.myapplication.databinding.ActivityCompareBinding
+import com.example.myapplication.util.ImageUtil
+import com.example.myapplication.util.ImageUtil.getBitmapFromUri
 import com.example.myapplication.util.ProgressDialogUtil
+import com.example.myapplication.util.SharedPreferencesUtil
 import com.example.myapplication.vision.FaceContourGraphic
 import com.example.myapplication.vision.GraphicOverlay
 import com.google.mlkit.vision.common.InputImage
@@ -23,7 +30,6 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.tasks.await
-import java.util.EnumSet.range
 import kotlin.math.pow
 import kotlin.math.round
 import kotlin.math.roundToInt
@@ -36,17 +42,24 @@ import kotlin.math.roundToInt
  *  4. 안내 다이어로그
  * */
 
-
-
-
 class CompareActivity : AppCompatActivity(){
     private lateinit var viewBinding: ActivityCompareBinding
 
+    private lateinit var mNewImgView : ImageView
+    private lateinit var mTrnsImgView : ImageView
+    
+    //화면비율 (가로,세로)
+    lateinit var mViewResolution : Pair<Int,Int>
+    lateinit var mBitmapResolution : Pair<Int,Int>
+    
     private lateinit var trnsImgUri : Uri
     private lateinit var newImgUri : Uri
 
     var trnsVectorByContour : MutableMap<Int, MutableList<Float>> = mutableMapOf()
     var newVectorByContour : MutableMap<Int, MutableList<Float>> = mutableMapOf()
+
+    var scaleX : Float = 1f
+    var scaleY : Float = 1f
 
     var trnsEulerY : Float = 0.0f
     var newEulerY : Float = 0.0f
@@ -91,23 +104,21 @@ class CompareActivity : AppCompatActivity(){
         newGraphicOverlay = findViewById(R.id.new_graphic_overlay)
 
         /**실전용*/
-//        val trnsBase64 = SharedPreferencesUtil.getString(getString(R.string.trns_pic)).toString()
-//        val imageBytes = Base64.decode(trnsBase64, Base64.DEFAULT)
-//        val trnsBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-//        val newStr = SharedPreferencesUtil.getString(getString(R.string.new_pic)).toString()
-//        trnsImgUri = ImageUtil.getImageUri(this@CompareActivity, trnsBitmap)
-//        newImgUri = Uri.parse(newStr)
+        val trnsBase64 = SharedPreferencesUtil.getString(getString(R.string.trns_pic)).toString()
+        val imageBytes = Base64.decode(trnsBase64, Base64.DEFAULT)
+        val trnsBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        val newStr = SharedPreferencesUtil.getString(getString(R.string.new_pic)).toString()
+        trnsImgUri = ImageUtil.getImageUri(this@CompareActivity, trnsBitmap)
+        newImgUri = Uri.parse(newStr)
 
         //테스트용
-        trnsImgUri = Uri.parse("content://media/external/images/media/1000005820") // 입벌리고 미소 지은거
-        newImgUri =  Uri.parse("content://media/external/images/media/1000005819") // 찌뿌등(화낸거 같음)
+//        trnsImgUri = Uri.parse("content://media/external/images/media/1000005820") // 입벌리고 미소 지은거
+//        newImgUri =  Uri.parse("content://media/external/images/media/1000005819") // 찌뿌등(화낸거 같음)
 
         Log.d("URIURIURI", trnsImgUri.toString())
         Log.d("URIURIURI", newImgUri.toString())
 
 
-        viewBinding.cmpTrnsPicImg.setImageURI(trnsImgUri)
-        viewBinding.cmpNewPicImg.setImageURI(newImgUri)
 
 
 
@@ -118,6 +129,44 @@ class CompareActivity : AppCompatActivity(){
             image_trns = InputImage.fromFilePath(this@CompareActivity, trnsImgUri)
 
             if(image_new == null || image_trns == null) throw java.lang.NullPointerException()
+
+
+            //----------------------------------------------//
+            mNewImgView = viewBinding.cmpNewPicImg
+            mTrnsImgView = viewBinding.cmpTrnsPicImg
+
+            mBitmapResolution =  Pair(image_new.width, image_new.height)
+            mViewResolution = Pair(mNewImgView.layoutParams.width , mNewImgView.layoutParams.height)
+
+            val scaleX : Float = mBitmapResolution.first/mViewResolution.first.toFloat()
+            val scaleY : Float = mBitmapResolution.second/mViewResolution.second.toFloat()
+            val scaleFactor : Float = Math.max(scaleX,scaleY)
+            this.scaleX = scaleX
+            this.scaleY = scaleY
+            Log.e(LOG_TAG, "scaleX : ${scaleX}, scaleY: ${scaleY}, scaleFactor: ${scaleFactor}")
+
+            var newBit = getBitmapFromUri(this@CompareActivity, newImgUri)
+            var trnsBit = getBitmapFromUri(this@CompareActivity, trnsImgUri)
+
+            val newResizedBitmap = Bitmap.createScaledBitmap(
+                newBit,
+                (newBit.getWidth() / scaleFactor).toInt(),
+                (newBit.getHeight() / scaleFactor).toInt(),
+                true
+            )
+            val trnsResizedBitmap = Bitmap.createScaledBitmap(
+                trnsBit,
+                (trnsBit.getWidth() / scaleFactor).toInt(),
+                (trnsBit.getHeight() / scaleFactor).toInt(),
+                true
+            )
+
+            if(scaleFactor!=null) FaceContourGraphic.globalScaleFactor = scaleFactor
+
+
+            mNewImgView.setImageBitmap(newResizedBitmap)
+            mTrnsImgView.setImageBitmap(trnsResizedBitmap)
+            //----------------------------------------------//
 
             ProgressDialogUtil.showProgressDialog(this@CompareActivity, "특징점 추출중...")
             CoroutineScope(Dispatchers.Default).launch{
@@ -138,8 +187,6 @@ class CompareActivity : AppCompatActivity(){
         }catch (e:Exception){
             e.printStackTrace()
         }
-
-
 
 
 
@@ -172,8 +219,6 @@ class CompareActivity : AppCompatActivity(){
         viewBinding.cmpGonext.setOnClickListener(myListener)
 
         viewBinding.cmpAppReset.setOnClickListener(myListener)
-
-        viewBinding.cmpUpperTv.setOnClickListener(myListener) //TESTING
     }
 
 
@@ -255,6 +300,8 @@ class CompareActivity : AppCompatActivity(){
             /** graphicOverlay로 그래픽 조절 필요 */
             for (i in faces.indices) { // 각 얼굴마다 (1)
                 val face: Face = faces[i]
+                graphicOverlay.setScaleY(scaleY)
+                graphicOverlay.setScaleX(scaleX)
                 val faceGraphic = FaceContourGraphic(graphicOverlay)
                 graphicOverlay!!.add(faceGraphic)
                 faceGraphic.updateFace(face)
@@ -320,7 +367,6 @@ class CompareActivity : AppCompatActivity(){
             //TODO Contour 점들을 잇기 (Testing)
             lifecycleScope.launch {
                 val facelist : List<Face> = channel.receive()
-                concatPoints(facelist)
             }
             Log.e(LOG_TAG, "diffRec.size.toString(): "+diffRec.size.toString())
             val strBuilder = java.lang.StringBuilder()
@@ -347,20 +393,6 @@ class CompareActivity : AppCompatActivity(){
 //        }
     }
 
-    private fun concatPoints( facelist : List<Face> ) {
-        for(face in facelist){
-            for(i in 1..faceContourTypes.size-1){
-                val ctrs : FaceContour ?= face.getContour(i)
-                if(ctrs==null) continue
-                val points : List<PointF> = ctrs.points
-                for(j in 0 until points.size-1){
-                    val curr = points.get(j)
-                    val next = points.get(j+1)
-                }
-            }
-        }
-    }
-
 
     //앱 재시작
     fun restartApp(){
@@ -378,14 +410,9 @@ class CompareActivity : AppCompatActivity(){
     }
 
 
-    //람다식 (실수, 반올림자리수)
-    val ronudFloat = {x:Float, dec:Int -> {
-        val square = (10f.pow(dec))
-        round(x*square) /square
-    }}
-
     fun roundFloat(x:Float, dec:Int?=2) : Float{
         val square = (10f.pow(dec!!))
         return (round(x*square) /square)
     }
+
 }

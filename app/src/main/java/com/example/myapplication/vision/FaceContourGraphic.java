@@ -17,6 +17,7 @@ import java.util.Map;
 /** Graphic instance for rendering face contours graphic overlay view. */
 public class FaceContourGraphic extends GraphicOverlay.Graphic {
 
+  public static float globalScaleFactor = 0.5f;
   private static final float FACE_POSITION_RADIUS = 2.0f;
   private static final float BOX_STROKE_WIDTH = 6.8f;
   private static final float FACE_STROKE_WIDTH = 2.0f;

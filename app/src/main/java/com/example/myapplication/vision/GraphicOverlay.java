@@ -44,9 +44,9 @@ import java.util.Set;
 public class GraphicOverlay extends View {
     private final Object lock = new Object();
     private int previewWidth;
-    private float widthScaleFactor = 1.0f;
+    private static float widthScaleFactor = 1+(1-0.96192384f); //testing
     private int previewHeight;
-    private float heightScaleFactor = 1.0f;
+    private float heightScaleFactor = 1+(1-0.90736043f); //testing (원본파일:이미지뷰)의 비율이 0.9073...임
     private int facing = CameraCharacteristics.LENS_FACING_BACK;
     private Set<Graphic> graphics = new HashSet<>();
 
@@ -89,6 +89,13 @@ public class GraphicOverlay extends View {
          */
         public float scaleY(float vertical) {
             return vertical * overlay.heightScaleFactor;
+        }
+
+        public static void setScaleX(float nX){
+            widthScaleFactor = nX;
+        }
+        public static void setScaleY(float nY){
+            widthScaleFactor = nY;
         }
 
         /**
@@ -186,4 +193,5 @@ public class GraphicOverlay extends View {
             }
         }
     }
+
 }

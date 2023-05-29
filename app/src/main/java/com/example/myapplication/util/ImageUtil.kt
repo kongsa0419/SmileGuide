@@ -5,14 +5,17 @@ package com.example.myapplication.util
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URL
+
 
 enum class MediaStoreFileType(
     val externalContentUri: Uri,
@@ -50,5 +53,22 @@ object ImageUtil {
         }
     }
 
+    fun getImgResFromUri(uri: Uri) : Pair<Int,Int> {
+        val options = BitmapFactory.Options()
+        options.inJustDecodeBounds = true
+        BitmapFactory.decodeFile(File(uri.path).absolutePath, options)
+        val imageHeight = options.outHeight
+        val imageWidth = options.outWidth
+        return Pair(imageWidth, imageHeight)
+    }
+
+    fun getBitmapFromUri(context: Context, uri:Uri) : Bitmap{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = android.graphics.ImageDecoder.createSource(context.contentResolver, uri)
+            return android.graphics.ImageDecoder.decodeBitmap(source)
+        } else {
+            return MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+        }
+    }
 
 }
