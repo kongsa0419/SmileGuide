@@ -28,6 +28,6 @@ interface AilabtoolsService {
     @POST("api/portrait/effects/emotion-editor")
     suspend fun getChangedImg(
         @Part image_target : MultipartBody.Part,
-        @Part("service_choice") return_form : Int=0
+        @Part("service_choice") return_form : Int?=0
     ) : AilabApiResponse
 }

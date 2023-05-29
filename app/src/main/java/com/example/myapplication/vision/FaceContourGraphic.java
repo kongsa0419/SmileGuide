@@ -9,47 +9,55 @@ import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceContour;
 import com.google.mlkit.vision.face.FaceLandmark;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /** Graphic instance for rendering face contours graphic overlay view. */
 public class FaceContourGraphic extends GraphicOverlay.Graphic {
 
-  private static final float FACE_POSITION_RADIUS = 10.0f;
-  private static final float ID_TEXT_SIZE = 70.0f;
-  private static final float ID_Y_OFFSET = 80.0f;
-  private static final float ID_X_OFFSET = -70.0f;
-  private static final float BOX_STROKE_WIDTH = 5.0f;
+  private static final float FACE_POSITION_RADIUS = 2.0f;
+  private static final float BOX_STROKE_WIDTH = 6.8f;
+  private static final float FACE_STROKE_WIDTH = 2.0f;
 
   private static final int[] COLOR_CHOICES = {
           Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.RED, Color.WHITE, Color.YELLOW
   };
-  private static int currentColorIndex = 0;
 
-  private final Paint facePositionPaint;
-  private final Paint idPaint;
+
+  //오일러Y가 -12 ~ 12 : 오른쪽 눈, 왼쪽 눈, 코 밑부분, 왼쪽 볼, 오른쪽 볼, 왼쪽 입, 오른쪽 입, 아래 입
+  public static final String[] CONTOUR = { /** 13개 랜드마크 */
+          "F_OVAL","LEB_T","LEB_B","REB_T","REB_B","LE","RE","ULT","ULB","LLT","LLB","NBR","NBT"
+  };
+
+  private final Paint facePositionPaint; //컨투어 점 용도
+  private final Paint facePositionLinePaint; //컨투어 선긋는 용도
   private final Paint boxPaint;
-
   private volatile Face face;
 
   public FaceContourGraphic(GraphicOverlay overlay) {
     super(overlay);
 
-    currentColorIndex = (currentColorIndex + 1) % COLOR_CHOICES.length;
-    final int selectedColor = COLOR_CHOICES[currentColorIndex];
 
+
+    //눈 코 입
     facePositionPaint = new Paint();
-    facePositionPaint.setColor(selectedColor);
+    facePositionPaint.setStyle(Paint.Style.STROKE);
+    facePositionPaint.setStrokeWidth(FACE_STROKE_WIDTH);
 
-    idPaint = new Paint();
-    idPaint.setColor(selectedColor);
-    idPaint.setTextSize(ID_TEXT_SIZE);
+
+    //눈 코 입
+    facePositionLinePaint = new Paint();
+    facePositionLinePaint.setStyle(Paint.Style.STROKE);
+    facePositionLinePaint.setStrokeWidth(FACE_STROKE_WIDTH/0.85f);
 
     boxPaint = new Paint();
-    boxPaint.setColor(selectedColor);
+    boxPaint.setColor(Color.RED);
     boxPaint.setStyle(Paint.Style.STROKE);
     boxPaint.setStrokeWidth(BOX_STROKE_WIDTH);
   }
+
 
   /**
    * Updates the face instance from the detection of the most recent frame. Invalidates the relevant
@@ -67,12 +75,11 @@ public class FaceContourGraphic extends GraphicOverlay.Graphic {
     if (face == null) {
       return;
     }
-
-    // Draws a circle at the position of the detected face, with the face's track id below.
+    //INFO 이렇게 x,y를 구해서 vector 구하자
+    //Draws a circle at the position of the detected face
     float x = translateX(face.getBoundingBox().centerX());
     float y = translateY(face.getBoundingBox().centerY());
     canvas.drawCircle(x, y, FACE_POSITION_RADIUS, facePositionPaint);
-    canvas.drawText("id: " + face.getTrackingId(), x + ID_X_OFFSET, y + ID_Y_OFFSET, idPaint);
 
     // Draws a bounding box around the face.
     float xOffset = scaleX(face.getBoundingBox().width() / 2.0f);
@@ -83,71 +90,28 @@ public class FaceContourGraphic extends GraphicOverlay.Graphic {
     float bottom = y + yOffset;
     canvas.drawRect(left, top, right, bottom, boxPaint);
 
-    List<FaceContour> contour = face.getAllContours();
-    for (FaceContour faceContour : contour) {
-      for (PointF point : faceContour.getPoints()) {
-        float px = translateX(point.x);
-        float py = translateY(point.y);
+
+    /** Contours */
+    for(int i=0; i<CONTOUR.length; i++){
+      FaceContour ctr = face.getContour(i);
+      if(ctr==null) continue;
+      int color = COLOR_CHOICES[i % COLOR_CHOICES.length];
+      facePositionPaint.setColor(color);
+      facePositionLinePaint.setColor(color);
+      int iterCnt = ctr.getPoints().size();
+      for(int j=1; j<iterCnt; j++){
+        PointF prev, next;
+        prev = ctr.getPoints().get(j-1);
+        next = ctr.getPoints().get(j);
+        float px = translateX(prev.x);
+        float py = translateY(prev.y);
+        float nx = translateX(next.x);
+        float ny = translateY(next.y);
         canvas.drawCircle(px, py, FACE_POSITION_RADIUS, facePositionPaint);
+        canvas.drawLine(px,py,nx,ny, facePositionLinePaint);
       }
     }
 
-    if (face.getSmilingProbability() != null) {
-      canvas.drawText(
-              "happiness: " + String.format("%.2f", face.getSmilingProbability()),
-              x + ID_X_OFFSET * 3,
-              y - ID_Y_OFFSET,
-              idPaint);
-    }
-
-    if (face.getRightEyeOpenProbability() != null) {
-      canvas.drawText(
-              "right eye: " + String.format("%.2f", face.getRightEyeOpenProbability()),
-              x - ID_X_OFFSET,
-              y,
-              idPaint);
-    }
-    if (face.getLeftEyeOpenProbability() != null) {
-      canvas.drawText(
-              "left eye: " + String.format("%.2f", face.getLeftEyeOpenProbability()),
-              x + ID_X_OFFSET * 6,
-              y,
-              idPaint);
-    }
-    FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
-    if (leftEye != null) {
-      canvas.drawCircle(
-              translateX(leftEye.getPosition().x),
-              translateY(leftEye.getPosition().y),
-              FACE_POSITION_RADIUS,
-              facePositionPaint);
-    }
-    FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
-    if (rightEye != null) {
-      canvas.drawCircle(
-              translateX(rightEye.getPosition().x),
-              translateY(rightEye.getPosition().y),
-              FACE_POSITION_RADIUS,
-              facePositionPaint);
-    }
-
-    FaceLandmark leftCheek = face.getLandmark(FaceLandmark.LEFT_CHEEK);
-    if (leftCheek != null) {
-      canvas.drawCircle(
-              translateX(leftCheek.getPosition().x),
-              translateY(leftCheek.getPosition().y),
-              FACE_POSITION_RADIUS,
-              facePositionPaint);
-    }
-    FaceLandmark rightCheek =
-            face.getLandmark(FaceLandmark.RIGHT_CHEEK);
-    if (rightCheek != null) {
-      canvas.drawCircle(
-              translateX(rightCheek.getPosition().x),
-              translateY(rightCheek.getPosition().y),
-              FACE_POSITION_RADIUS,
-              facePositionPaint);
-    }
   }
 }
 

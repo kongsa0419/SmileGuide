@@ -69,29 +69,34 @@ class QuizActivity : AppCompatActivity() {
          *  삐짐 :    List POUT = {POUTING 삐짐}
          *  우울함:   List BAD = {DEPRESSED 우울함 , DISTRESSED 속상함}
          * */
-        const val PROUD = 11
-        const val THANKFUL = 12
-        const val NICE = 13
+        const val PROUD = 3
+        const val THANKFUL = 3
+        const val NICE = 3
         //BIG_LAUGH = 21 (위에 이미 정의됌)
-        const val HAPPINESS = 22
-        const val DELIGHT =23
+        const val HAPPINESS = 0
+        const val DELIGHT = 0
         //POUTING = 31 (위에 이미 정의됌)
-        const val DEPRESSED =9
-        const val DISTRESSED = 10
+        const val DEPRESSED = 2
+        const val DISTRESSED = 2
+
+        final val MAP_EMOTION = mapOf<String,Int>("활짝 웃음" to 0, "행복함" to 0, "반가움" to 0,
+            "삐짐" to 1,
+            "우울함" to 2, "속상함" to 2,
+            "뿌듯함" to 0, "고마움" to 0, "기분 좋음" to 0)
 
 
         /**Luxand api result*/
 
         //------------QOA : Question Option Array--------------//
-        val QOA_NICE = listOf<Int>(PROUD, THANKFUL, NICE)
-        val QOA_SMILE = listOf<Int>(BIG_LAUGH, HAPPINESS, DELIGHT)
-        val QOA_POUT = listOf<Int>(POUTING)
-        val QOA_BAD = listOf<Int>(DEPRESSED, DISTRESSED)
-
-        val map_NICE = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
-        val map_SMILE = mapOf<Int, String> (BIG_LAUGH to "", THANKFUL to "", NICE to "")
-        val map_POUT = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
-        val map_BAD = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
+//        val QOA_NICE = listOf<Int>(PROUD, THANKFUL, NICE)
+//        val QOA_SMILE = listOf<Int>(BIG_LAUGH, HAPPINESS, DELIGHT)
+//        val QOA_POUT = listOf<Int>(POUTING)
+//        val QOA_BAD = listOf<Int>(DEPRESSED, DISTRESSED)
+//
+//        val map_NICE = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
+//        val map_SMILE = mapOf<Int, String> (BIG_LAUGH to "", THANKFUL to "", NICE to "")
+//        val map_POUT = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
+//        val map_BAD = mapOf<Int, String> (PROUD to "", THANKFUL to "", NICE to "")
 
 
         
@@ -306,15 +311,17 @@ class QuizActivity : AppCompatActivity() {
                         다음 let문을 썼더니 API call을 기다리지 않는 거 같음.
                         ?.let{ api2SampleResult}.toString()
                          */
-//                        val backX : String = callBackgroundRemove()   //?.let{ api1SampleResult}.toString() //인물 배경제거 API1, 호출 실패시 샘플
-//                        val file : File = convertToFile(applicationContext, backX) //
-//                        val chnged  = callChageFacialExpr(file, 0/**/)
+                        val opt : Int? = MAP_EMOTION.get(quizItem?.answer)
+
+                        val backX : String = callBackgroundRemove()   //?.let{ api1SampleResult}.toString() //인물 배경제거 API1, 호출 실패시 샘플
+                        val file : File = convertToFile(applicationContext, backX) //
+                        val chnged  = callChageFacialExpr(file, opt/**/)
 
 
                         //테스트
-                        val backX = api1SampleResult
-                        val file : File = convertToFile(applicationContext, backX)
-                        val chnged = api2SampleResult
+//                        val backX = api1SampleResult
+//                        val file : File = convertToFile(applicationContext, backX)
+//                        val chnged = api2SampleResult
 
 
                         withContext(Dispatchers.Main){
@@ -434,7 +441,7 @@ class QuizActivity : AppCompatActivity() {
  * IO스레드에서 이 suspend함수를 기다리는데 IO스레드 내부에서 또 다른 callBack을 기다리고 있으면 ....????
  * 다시 물어봐야겠다
  * */
-    private suspend fun callChageFacialExpr(file:File, opt: Int = 0) : String =
+    private suspend fun callChageFacialExpr(file:File, opt: Int ?= 0) : String =
         withContext(Dispatchers.IO){
         var ret : String ?= null //imgFaceChanged
         val requestFile = ContentUriRequestBody(this@QuizActivity, Uri.fromFile(file)).toFormData("image_target")

@@ -114,7 +114,6 @@
             android:layout_height="300dp"
             android:scaleType="centerCrop"
             app:layout_constraintEnd_toEndOf="@+id/cmp_trns_pic_expl"
-            app:layout_constraintHorizontal_bias="0.487"
             app:layout_constraintStart_toStartOf="@+id/cmp_trns_pic_expl"
             app:layout_constraintTop_toBottomOf="@+id/cmp_trns_pic_expl"
             tools:src="@drawable/suzy" />
@@ -125,7 +124,6 @@
             android:layout_width="190dp"
             android:layout_height="300dp"
             app:layout_constraintEnd_toEndOf="@+id/cmp_trns_pic_expl"
-            app:layout_constraintHorizontal_bias="0.487"
             app:layout_constraintStart_toStartOf="@+id/cmp_trns_pic_expl"
             app:layout_constraintTop_toBottomOf="@+id/cmp_trns_pic_expl"
             android:layout_alignParentStart="true"
@@ -246,6 +244,15 @@
         android:layout_margin="15dp"
         android:padding="8dp"
         />
+
+
+    <TextView
+        android:id="@+id/cmp_result_expl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:paddingLeft="10dp"/>
 
 
 

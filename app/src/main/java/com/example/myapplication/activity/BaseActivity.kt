@@ -465,6 +465,8 @@ class BaseActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        newPicSession = false
+        Log.e(LOG_TAG, "BaseActivity에서 onDestroy() 호출")
         cameraExecutor.shutdown()
     }
 }

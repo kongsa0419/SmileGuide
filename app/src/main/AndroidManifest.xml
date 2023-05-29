@@ -32,6 +32,7 @@
         <activity
             android:name=".activity.CompareActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -48,7 +49,6 @@
         <activity
             android:name=".activity.BaseActivity"
             android:exported="false">
-
             <!--            원래 false였음-->
 
         </activity>
