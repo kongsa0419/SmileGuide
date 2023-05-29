@@ -23,7 +23,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        //firebase bucket
+//        firebase bucket
         buildConfigField "String", "firebase_bucket", properties["firebase.bucket"]
 
         // ailabtools : api keys
