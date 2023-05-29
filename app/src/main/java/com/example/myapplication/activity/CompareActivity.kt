@@ -10,8 +10,10 @@ import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatToggleButton
 import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.R
 import com.example.myapplication.activity.BaseActivity.Companion.LOG_TAG
@@ -47,6 +49,8 @@ class CompareActivity : AppCompatActivity(){
 
     private lateinit var mNewImgView : ImageView
     private lateinit var mTrnsImgView : ImageView
+
+    private lateinit var showBtn : Button
     
     //화면비율 (가로,세로)
     lateinit var mViewResolution : Pair<Int,Int>
@@ -74,6 +78,12 @@ class CompareActivity : AppCompatActivity(){
     lateinit var resultExpl : String
 
     val channel = Channel<List<Face>>()
+
+    var showPointsMode:Boolean = false
+    var newShowPreps : Pair<List<Face>, GraphicOverlay> ?= null
+    var trnsShowPreps : Pair<List<Face>, GraphicOverlay> ?= null
+
+
 
     var similarityScore = 0; //유사도 점수
 
@@ -104,16 +114,16 @@ class CompareActivity : AppCompatActivity(){
         newGraphicOverlay = findViewById(R.id.new_graphic_overlay)
 
         /**실전용*/
-        val trnsBase64 = SharedPreferencesUtil.getString(getString(R.string.trns_pic)).toString()
-        val imageBytes = Base64.decode(trnsBase64, Base64.DEFAULT)
-        val trnsBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        val newStr = SharedPreferencesUtil.getString(getString(R.string.new_pic)).toString()
-        trnsImgUri = ImageUtil.getImageUri(this@CompareActivity, trnsBitmap)
-        newImgUri = Uri.parse(newStr)
+//        val trnsBase64 = SharedPreferencesUtil.getString(getString(R.string.trns_pic)).toString()
+//        val imageBytes = Base64.decode(trnsBase64, Base64.DEFAULT)
+//        val trnsBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+//        val newStr = SharedPreferencesUtil.getString(getString(R.string.new_pic)).toString()
+//        trnsImgUri = ImageUtil.getImageUri(this@CompareActivity, trnsBitmap)
+//        newImgUri = Uri.parse(newStr)
 
         //테스트용
-//        trnsImgUri = Uri.parse("content://media/external/images/media/1000005820") // 입벌리고 미소 지은거
-//        newImgUri =  Uri.parse("content://media/external/images/media/1000005819") // 찌뿌등(화낸거 같음)
+        trnsImgUri = Uri.parse("content://media/external/images/media/1000005820") // 입벌리고 미소 지은거
+        newImgUri =  Uri.parse("content://media/external/images/media/1000005819") // 찌뿌등(화낸거 같음)
 
         Log.d("URIURIURI", trnsImgUri.toString())
         Log.d("URIURIURI", newImgUri.toString())
@@ -180,6 +190,7 @@ class CompareActivity : AppCompatActivity(){
                 t.await() //끝날때까지 기다리기
                 withContext(Dispatchers.Main){
                     val score = async{calcSimilarity()}.await()
+                    similarityScore = score
                     updateUI(score)  //정답 여부에 따른 UI 업데이트
                     ProgressDialogUtil.hideProgressDialog()
                 }
@@ -213,6 +224,32 @@ class CompareActivity : AppCompatActivity(){
         }
 
 
+        showBtn = findViewById(R.id.cmp_btn_show_points)
+        showBtn.setOnClickListener{
+            Log.e(LOG_TAG, "AAAAAAAAAAAAAAAAAA")
+            try {
+                if (newShowPreps == null || trnsShowPreps == null) throw Exception()
+                it.isEnabled = !it.isEnabled
+                showPointsMode = !showPointsMode
+                CoroutineScope(Dispatchers.Default).launch{
+                    val a = lifecycleScope.async { showToggle(newShowPreps!!.first, newShowPreps!!.second) }
+                    val b = lifecycleScope.async  { showToggle(trnsShowPreps!!.first, trnsShowPreps!!.second)}
+                    a.await()
+                    b.await()
+                    withContext(Dispatchers.Main){
+                        if(showPointsMode){
+                            viewBinding.cmpResultExpl.visibility = View.VISIBLE //정답 여부에 따른 UI 업데이트
+                        }else{
+                            viewBinding.cmpResultExpl.visibility = View.INVISIBLE
+                        }
+                        it.isEnabled = !it.isEnabled
+                    }
+                }
+                Log.e(LOG_TAG, "토글버튼 들어왔음.")
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+        }
 
         viewBinding.cmpGoback.setOnClickListener(myListener)
 
@@ -292,31 +329,22 @@ class CompareActivity : AppCompatActivity(){
 
 
     private fun processFaceContourDetectionResult(faces: List<Face>, graphicOverlay:GraphicOverlay, flag : Int) {
-            // Task completed successfully
-            if (faces.size == 0) {
-                Log.d(LOG_TAG, "MLKIT_FACE_CONTOUR_ERROR")
-            }
-            graphicOverlay!!.clear()
-            /** graphicOverlay로 그래픽 조절 필요 */
-            for (i in faces.indices) { // 각 얼굴마다 (1)
-                val face: Face = faces[i]
-                graphicOverlay.setScaleY(scaleY)
-                graphicOverlay.setScaleX(scaleX)
-                val faceGraphic = FaceContourGraphic(graphicOverlay)
-                graphicOverlay!!.add(faceGraphic)
-                faceGraphic.updateFace(face)
-                Log.d("ML_KIT", face.toString())
-            }
+        // Task completed successfully
+        if (faces.size == 0) {
+            Log.d(LOG_TAG, "MLKIT_FACE_CONTOUR_ERROR")
+        }
 
-            // 주어진 사진의 각 Contour를 돌면서 두 포인트간의 기울기를 측정하는 함수 호출
-            var gradientMapByContours : MutableMap<Int, MutableList<Float>>  = getGradientListByContours(faces)
-            if(flag == 0){ /**NEW*/
-                newVectorByContour = gradientMapByContours
-                newEulerY = faces[0].headEulerAngleY
-            }else if(flag == 1){ /**TRNS*/
-                trnsVectorByContour = gradientMapByContours
-                trnsEulerY = faces[0].headEulerAngleY
-            }
+        // 주어진 사진의 각 Contour를 돌면서 두 포인트간의 기울기를 측정하는 함수 호출
+        var gradientMapByContours : MutableMap<Int, MutableList<Float>>  = getGradientListByContours(faces)
+        if(flag == 0){ /**NEW*/
+            newVectorByContour = gradientMapByContours
+            newEulerY = faces[0].headEulerAngleY
+            newShowPreps = Pair(faces, graphicOverlay)
+        }else if(flag == 1){ /**TRNS*/
+            trnsVectorByContour = gradientMapByContours
+            trnsEulerY = faces[0].headEulerAngleY
+            trnsShowPreps = Pair(faces, graphicOverlay)
+        }
     }
 
     private fun getGradientListByContours(faces: List<Face>) : MutableMap<Int, MutableList<Float>> {
@@ -364,10 +392,6 @@ class CompareActivity : AppCompatActivity(){
 
         //----
         try{
-            //TODO Contour 점들을 잇기 (Testing)
-            lifecycleScope.launch {
-                val facelist : List<Face> = channel.receive()
-            }
             Log.e(LOG_TAG, "diffRec.size.toString(): "+diffRec.size.toString())
             val strBuilder = java.lang.StringBuilder()
             val ctrs = faceContourTypes.size-1 //13
@@ -377,7 +401,6 @@ class CompareActivity : AppCompatActivity(){
             strBuilder.append("${faceContourTypes[ctrs]}: ${diffRec[ctrs-1]}\n")
             resultExpl = strBuilder.toString()
             viewBinding.cmpResultExpl.text = resultExpl
-            viewBinding.cmpResultExpl.bringToFront()
         }catch (e:Exception){
             e.printStackTrace()
         }
@@ -407,6 +430,23 @@ class CompareActivity : AppCompatActivity(){
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
         finish()
+    }
+
+    suspend fun showToggle(faces: List<Face>, graphicOverlay:GraphicOverlay){
+        if(showPointsMode){
+            /** graphicOverlay로 그래픽 조절 필요 */
+            for (i in faces.indices) { // 각 얼굴마다 (1)
+                val face: Face = faces[i]
+                graphicOverlay.setScaleY(scaleY)
+                graphicOverlay.setScaleX(scaleX)
+                val faceGraphic = FaceContourGraphic(graphicOverlay)
+                graphicOverlay!!.add(faceGraphic)
+                faceGraphic.updateFace(face)
+                Log.d("ML_KIT", face.toString())
+            }
+        }else{
+            graphicOverlay!!.clear()
+        }
     }
 
 
