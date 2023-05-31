@@ -113,17 +113,19 @@ class CompareActivity : AppCompatActivity(){
         trnsGraphicOverlay = findViewById(R.id.trns_graphic_overlay)
         newGraphicOverlay = findViewById(R.id.new_graphic_overlay)
 
+
+
         /**실전용*/
-//        val trnsBase64 = SharedPreferencesUtil.getString(getString(R.string.trns_pic)).toString()
-//        val imageBytes = Base64.decode(trnsBase64, Base64.DEFAULT)
-//        val trnsBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-//        val newStr = SharedPreferencesUtil.getString(getString(R.string.new_pic)).toString()
-//        trnsImgUri = ImageUtil.getImageUri(this@CompareActivity, trnsBitmap)
-//        newImgUri = Uri.parse(newStr)
+        val trnsBase64 = SharedPreferencesUtil.getString(getString(R.string.trns_pic)).toString()
+        val imageBytes = Base64.decode(trnsBase64, Base64.DEFAULT)
+        val trnsBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        val newStr = SharedPreferencesUtil.getString(getString(R.string.new_pic)).toString()
+        trnsImgUri = ImageUtil.getImageUri(this@CompareActivity, trnsBitmap)
+        newImgUri = Uri.parse(newStr)
 
         //테스트용
-        trnsImgUri = Uri.parse("content://media/external/images/media/1000005820") // 입벌리고 미소 지은거
-        newImgUri =  Uri.parse("content://media/external/images/media/1000005819") // 찌뿌등(화낸거 같음)
+//        trnsImgUri = Uri.parse("content://media/external/images/media/1000005820") // 입벌리고 미소 지은거
+//        newImgUri =  Uri.parse("content://media/external/images/media/1000005819") // 찌뿌등(화낸거 같음)
 
         Log.d("URIURIURI", trnsImgUri.toString())
         Log.d("URIURIURI", newImgUri.toString())

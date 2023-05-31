@@ -15,6 +15,9 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 enum class MediaStoreFileType(
@@ -30,9 +33,10 @@ object ImageUtil {
     fun getImageUri(context: Context, inImage: Bitmap): Uri {
         val bytes = ByteArrayOutputStream()
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val date = getSimpleDateStr()
         val path =
-            MediaStore.Images.Media.insertImage(context.contentResolver, inImage, "Title", null)
-        return Uri.parse(path)
+            MediaStore.Images.Media.insertImage(context.contentResolver, inImage, "Title_${date}", null) // Title로 했다가 에러났음. 버퍼 사이즈가 32라서 32개 이상을 동일 이름으로 저장시 Null 반환됌
+        return Uri.parse(path.toString())
     }
 
     suspend fun convertURLToFile(url: String): File {
@@ -69,6 +73,11 @@ object ImageUtil {
         } else {
             return MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
         }
+    }
+    private fun getSimpleDateStr():String{
+        val sdf = SimpleDateFormat("MM-dd-yyyy-hh.mm.ss.SSS.a", Locale.KOREA)
+        val date=sdf.format(Date())
+        return date.toString()
     }
 
 }
