@@ -11,7 +11,7 @@ import retrofit2.http.*
 // INFO : https://velog.io/@dev_thk28/Android-Retrofit2-Multipart%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0-Java
 interface AilabtoolsService {
     @Multipart
-    @Headers("ailabapi-api-key: ${BuildConfig.api_key_ailabtools_yeo}")
+    @Headers("ailabapi-api-key: ${BuildConfig.api_key_ailabtools_seo}")
     @POST("api/cutout/portrait/portrait-background-removal")
     suspend fun getBackRmvdImg(
         @Part image : MultipartBody.Part,
@@ -23,7 +23,7 @@ interface AilabtoolsService {
 
 
     @Multipart
-    @Headers("ailabapi-api-key:${BuildConfig.api_key_ailabtools_yeo}")
+    @Headers("ailabapi-api-key:${BuildConfig.api_key_ailabtools_seo}")
     @POST("api/portrait/effects/emotion-editor")
     suspend fun getChangedImg(
         @Part image_target : MultipartBody.Part,

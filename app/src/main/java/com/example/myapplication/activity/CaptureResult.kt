@@ -205,6 +205,7 @@ class CaptureResult : AppCompatActivity() {
                     //INFO : 다운로드 가능한 URI = downloadUri.toString()
                     val downloadUri = task.result
                     Log.d(TAG, "[FB]downloadUri.toString()" + downloadUri.toString())
+                    Toast.makeText(applicationContext, "[FB]이미지 업로드 성공", Toast.LENGTH_SHORT).show()
                 } else { //Handle failures
                     Toast.makeText(applicationContext, "[FB]이미지 업로드 실패", Toast.LENGTH_SHORT).show()
                 }
