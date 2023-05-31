@@ -45,12 +45,14 @@
         <activity
             android:name=".activity.BaseActivity"
             android:exported="true">
-            <!--            원래 false였음-->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!--            원래 false였음-->
+
+
         </activity>
 
 <!--        <activity-->

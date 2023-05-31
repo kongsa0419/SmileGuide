@@ -312,6 +312,7 @@ class QuizActivity : AppCompatActivity() {
                         ?.let{ api2SampleResult}.toString()
                          */
                         val opt : Int? = MAP_EMOTION.get(quizItem?.answer)
+                        if(opt!=null) SharedPreferencesUtil.putString(getString(R.string.quiz_ans_str), opt.toString())
 
                         val backX : String = callBackgroundRemove()   //?.let{ api1SampleResult}.toString() //인물 배경제거 API1, 호출 실패시 샘플
                         val file : File = convertToFile(applicationContext, backX) //

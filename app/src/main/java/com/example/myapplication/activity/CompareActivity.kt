@@ -51,11 +51,11 @@ class CompareActivity : AppCompatActivity(){
     private lateinit var mTrnsImgView : ImageView
 
     private lateinit var showBtn : Button
-    
+
     //화면비율 (가로,세로)
     lateinit var mViewResolution : Pair<Int,Int>
     lateinit var mBitmapResolution : Pair<Int,Int>
-    
+
     private lateinit var trnsImgUri : Uri
     private lateinit var newImgUri : Uri
 
@@ -264,6 +264,56 @@ class CompareActivity : AppCompatActivity(){
 
 
 
+//    //TODO 표정유사도 로직 구현
+//    // 특징점 추출 , 벡터값 구해져 있음.
+//    // 일단 러프하게 계산해보자
+//    private fun calcSimilarity() : Int{
+//        val cntContour = 13
+//        var isComparable = true
+//        if(!(newEulerY in -12.0f .. 12.0f) || !(trnsEulerY in -12f .. 12f)){
+//            Log.e(LOG_TAG, "두 사진이 정면을 바라보고 있지 않습니다.")
+//            Log.e(LOG_TAG, "newEulerY: $newEulerY | trnsEulerY: $trnsEulerY")
+//            //TODO UI에 이런 문구를 주는게 나을지 확인
+//        }
+//        if(trnsVectorByContour==null || newVectorByContour==null){
+//            Log.e(LOG_TAG, "제대로 특징 값이 탐색되지 않았습니다.")
+//            isComparable = false
+//        }
+//        var score : Float = 100f // 최종 합산 점수
+//        diffRec.add(0f) //처음 Contour 가 Box여서 건너뜀
+//        for(i in 0..cntContour){
+//            val trnsVector = trnsVectorByContour.get(i)
+//            val newVector = newVectorByContour.get(i)
+//            if(trnsVector == null || newVector == null) continue //0번이 BOX여서 건너뜀
+//            if(trnsVector?.size != newVector?.size){
+//                Log.e(LOG_TAG, "이상하다 Contour개수가 안맞지?")
+//                continue;
+//            }
+//            /** FACE_OVAL은 비교를 건너뛸까? 고려해볼 필요 있겠다? */
+//            val cnt = trnsVector!!.size
+//            var sub = 0.0f
+//            for(j in 0 until trnsVector!!.size){
+//                val t = trnsVector.get(j)
+//                val n = newVector!!.get(j)
+//                val isDiff = (t>0) xor (n>0) //두 수의 부호가 다른지 확인
+//                var weight = if(isDiff){ 1.4f/cnt  } else{ 1.0f/cnt } //Contour당 PointF 개수가 많을수록 차이는 적어야함. 개수가 적을수록 차이는 클 가능성이 높음. --> 1/N
+//
+//                var norm = Math.abs(t-n)
+//                sub += (weight * norm)
+//            }
+//
+//            val rec = roundFloat(sub)
+//            Log.e(LOG_TAG, "Contour${(i+1)}: ${rec} 점을 차감합니다. ")
+//            diffRec.add(rec) //특정 컨투어 마다의 유사도 불일치 정도를 저장
+//            score = score - sub
+//        }
+//        return score.roundToInt()
+//    }
+
+
+
+
+
     //TODO 표정유사도 로직 구현
     // 특징점 추출 , 벡터값 구해져 있음.
     // 일단 러프하게 계산해보자
@@ -281,6 +331,10 @@ class CompareActivity : AppCompatActivity(){
         }
         var score : Float = 100f // 최종 합산 점수
         diffRec.add(0f) //처음 Contour 가 Box여서 건너뜀
+        val ans : Int ?= SharedPreferencesUtil.getString(getString(R.string.quiz_ans_str)).toInt()
+//        val ans = (0..3).random()
+//        val ans = 1
+        Log.e(LOG_TAG,ans.toString())
         for(i in 0..cntContour){
             val trnsVector = trnsVectorByContour.get(i)
             val newVector = newVectorByContour.get(i)
@@ -289,16 +343,61 @@ class CompareActivity : AppCompatActivity(){
                 Log.e(LOG_TAG, "이상하다 Contour개수가 안맞지?")
                 continue;
             }
-            /** FACE_OVAL은 비교를 건너뛸까? 고려해볼 필요 있겠다? */
+
+
+            /**눈썹: 2,3,4,5 (가중치 1.2) ->슬플때 유의미
+             * 눈 : 6,7 (가중치 1.5) ->슬플때 유의미
+             * 입:  8,9,10,11 (가중치 1.7) ->기쁠때 유의미
+             * -------------------------------------------
+             * ans {0:큰웃음, 1:삐짐, 2:슬픔, 3:미소}
+             * */
+            var w = 0f
+            if(i in 2..11) {w = 1.1f} //눈썹,눈,입에 관해서는 가중치를 줌
+            try {
+                Log.d(LOG_TAG, "---------------------")
+                if(ans==null) Log.d(LOG_TAG,"ans===========null")
+//                val ans = (0..3).random()
+                if(ans==null) Log.e(LOG_TAG, "quiz_answer_str가 quiz에서 제대로 넘어오지 않음.")
+                else{
+                    if(i in 2..5){
+                        w = 1.2f
+                    }else if(i in 6..7){
+                        w = 1.5f
+                    }else if(i in 9..10){
+                        w = 1.7f
+                    }else{
+                        w = 1f
+                    }
+                }
+                /**복잡하게 짜보려고 했으나, 결과가 심히 불안정함.*/
+                /*else{
+                    if(i in 2..5){
+                        w = 1.2f
+//                        if(ans==2){ w = (w * 1.8f) }
+//                        else if(ans==1){w *= 1.56f}
+//                        else w *= 1.45f
+                    }else if(i in 6..7){
+                        w = 1.5f
+//                        if(ans==2){ w = (w * 1.8f) }
+//                        else if(ans==1){w *= 1.5f}
+//                        else w *= 1.45f
+                    }else if(i in 8..11){
+                        w = 1.7f
+//                        if(ans==0 || ans==3){ w = (w * 1.6f) }
+//                        else w *= 1.25f
+                    }
+                }*/
+            }catch (e:Exception){ Log.e(LOG_TAG, e.printStackTrace().toString()) }
+
             val cnt = trnsVector!!.size
-            var sub = 0.0f
+            var sub = 0.0f //불일치도
             for(j in 0 until trnsVector!!.size){
                 val t = trnsVector.get(j)
                 val n = newVector!!.get(j)
                 val isDiff = (t>0) xor (n>0) //두 수의 부호가 다른지 확인
-                var weight = if(isDiff){ 1.4f/cnt  } else{ 1.0f/cnt } //Contour당 PointF 개수가 많을수록 차이는 적어야함. 개수가 적을수록 차이는 클 가능성이 높음. --> 1/N
+                var weight = if(isDiff){ 0.55f/cnt * w } else{ 0.25f/cnt * w } //Contour당 PointF 개수가 많을수록 차이는 적어야함. 개수가 적을수록 차이는 클 가능성이 높음. --> 1/N
 
-                var norm = Math.abs(t-n)
+                var norm = Math.abs(t-n) //차이의 절대값
                 sub += (weight * norm)
             }
 
@@ -309,8 +408,6 @@ class CompareActivity : AppCompatActivity(){
         }
         return score.roundToInt()
     }
-
-
 
 
 
@@ -398,7 +495,8 @@ class CompareActivity : AppCompatActivity(){
             val strBuilder = java.lang.StringBuilder()
             val ctrs = faceContourTypes.size-1 //13
             for(i in (1 until ctrs)){
-                strBuilder.append("${faceContourTypes[i]}: ${diffRec[i-1]}\n")
+                strBuilder.append("${faceContourTypes[i]}: ${diffRec[i]}\t")
+                if(i%2==0) strBuilder.append("\n")
             }
             strBuilder.append("${faceContourTypes[ctrs]}: ${diffRec[ctrs-1]}\n")
             resultExpl = strBuilder.toString()
